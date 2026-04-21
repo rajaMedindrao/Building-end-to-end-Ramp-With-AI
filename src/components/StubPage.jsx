@@ -1,6 +1,36 @@
 import { useState } from 'react'
-import { Link, useLocation } from 'react-router-dom'
+import { Link, useLocation, useSearchParams } from 'react-router-dom'
 import { TOP_PAGES } from '../routes.js'
+
+const BILLING_MODES = ['monthly', 'annual']
+function pickBilling(s) {
+  return BILLING_MODES.includes(s) ? s : 'monthly'
+}
+function resolveByBilling(value, billing) {
+  if (value && typeof value === 'object' && !Array.isArray(value)) {
+    return value[billing] ?? value.monthly ?? ''
+  }
+  return value
+}
+
+function BillingToggle({ billing, onChange }) {
+  return (
+    <div className="billing-toggle" role="group" aria-label="Billing period">
+      {BILLING_MODES.map((mode) => (
+        <button
+          key={mode}
+          type="button"
+          className={`billing-opt ${billing === mode ? 'is-active' : ''}`}
+          aria-pressed={billing === mode}
+          onClick={() => onChange(mode)}
+        >
+          {mode === 'monthly' ? 'Monthly' : 'Annual'}
+          {mode === 'annual' && <span className="billing-save">Save 20%</span>}
+        </button>
+      ))}
+    </div>
+  )
+}
 
 function Cell({ value }) {
   if (value === true) return <span className="cmp-yes" aria-label="Included">✓</span>
@@ -8,7 +38,10 @@ function Cell({ value }) {
   return <span className="cmp-text">{value}</span>
 }
 
-function ComparisonTable({ data }) {
+function ComparisonTable({ data, billingRow }) {
+  const groups = billingRow
+    ? [{ title: billingRow.title, rows: [billingRow.row] }, ...data.groups]
+    : data.groups
   return (
     <div className="cmp-wrap">
       <table className="cmp">
@@ -23,7 +56,7 @@ function ComparisonTable({ data }) {
             ))}
           </tr>
         </thead>
-        {data.groups.map((g) => (
+        {groups.map((g) => (
           <tbody key={g.title}>
             <tr className="cmp-group">
               <th scope="rowgroup" colSpan={data.columns.length + 1}>{g.title}</th>
@@ -103,6 +136,19 @@ export default function StubPage() {
 }
 
 function TopPage({ page }) {
+  const [searchParams, setSearchParams] = useSearchParams()
+  const billing = pickBilling(searchParams.get('billing'))
+  const setBilling = (next) => {
+    const params = new URLSearchParams(searchParams)
+    if (next === 'monthly') params.delete('billing')
+    else params.set('billing', next)
+    setSearchParams(params, { replace: true })
+  }
+  const showBillingToggle = !!page.plans && page.eyebrow === 'Pricing'
+  const billingRow = page.billingPricing
+    ? { title: page.billingPricing.title, row: page.billingPricing[billing] }
+    : null
+
   return (
     <main className="page-stub">
       <section className="page-hero">
@@ -135,22 +181,30 @@ function TopPage({ page }) {
       {page.plans && (
         <section className="section">
           <div className="container">
+            {showBillingToggle && (
+              <BillingToggle billing={billing} onChange={setBilling} />
+            )}
             <div className="plans">
-              {page.plans.map((p) => (
-                <article key={p.name} className={`plan ${p.highlight ? 'plan-hl' : ''}`}>
-                  <h3>{p.name}</h3>
-                  <div className="plan-price">{p.price}</div>
-                  <p className="plan-line">{p.line}</p>
-                  <ul>
-                    {p.features.map((f) => (
-                      <li key={f}><span className="plan-check">✓</span>{f}</li>
-                    ))}
-                  </ul>
-                  <Link to="/get-started" className={`btn ${p.highlight ? 'btn-lime' : 'btn-dark'}`}>
-                    {p.price === 'Talk to us' ? 'Contact sales' : 'Get started'}
-                  </Link>
-                </article>
-              ))}
+              {page.plans.map((p) => {
+                const priceText = resolveByBilling(p.price, billing)
+                const lineText = resolveByBilling(p.line, billing)
+                const isContact = priceText === 'Talk to us'
+                return (
+                  <article key={p.name} className={`plan ${p.highlight ? 'plan-hl' : ''}`}>
+                    <h3>{p.name}</h3>
+                    <div className="plan-price">{priceText}</div>
+                    <p className="plan-line">{lineText}</p>
+                    <ul>
+                      {p.features.map((f) => (
+                        <li key={f}><span className="plan-check">✓</span>{f}</li>
+                      ))}
+                    </ul>
+                    <Link to="/get-started" className={`btn ${p.highlight ? 'btn-lime' : 'btn-dark'}`}>
+                      {isContact ? 'Contact sales' : 'Get started'}
+                    </Link>
+                  </article>
+                )
+              })}
             </div>
           </div>
         </section>
@@ -163,7 +217,7 @@ function TopPage({ page }) {
               <h2>Compare every plan</h2>
               <p>The full feature list, side by side. No asterisks.</p>
             </div>
-            <ComparisonTable data={page.comparison} />
+            <ComparisonTable data={page.comparison} billingRow={billingRow} />
           </div>
         </section>
       )}

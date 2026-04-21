@@ -141,8 +141,11 @@ export const TOP_PAGES = {
       },
       {
         name: 'Ramp Plus',
-        price: '$15 / user / mo',
-        line: 'For finance teams that need more.',
+        price: { monthly: '$15 / user / mo', annual: '$12 / user / mo' },
+        line: {
+          monthly: 'For finance teams that need more.',
+          annual: 'Billed annually — save 20%.',
+        },
         features: [
           'Everything in Ramp',
           'Custom approval workflows',
@@ -163,6 +166,11 @@ export const TOP_PAGES = {
         ],
       },
     ],
+    billingPricing: {
+      title: 'Pricing',
+      monthly: ['Price', 'Free', '$15 / user / mo', 'Custom'],
+      annual: ['Price', 'Free', '$12 / user / mo (annual)', 'Custom'],
+    },
     comparison: {
       columns: ['Ramp', 'Ramp Plus', 'Ramp Enterprise'],
       groups: [

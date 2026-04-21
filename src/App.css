@@ -479,6 +479,36 @@ h3 { font-size: clamp(22px, 2.2vw, 28px); line-height: 1.15; }
 .page-card h3 { font-size: 20px; margin-bottom: 8px; }
 .page-card p { color: var(--muted); font-size: 14px; }
 
+.billing-toggle {
+  display: flex; align-items: center; gap: 4px;
+  background: #faf6ec; border: 1px solid var(--line);
+  border-radius: 999px; padding: 4px;
+  margin: 0 auto 28px; width: max-content;
+}
+.billing-opt {
+  display: inline-flex; align-items: center; gap: 8px;
+  border: 0; background: transparent; cursor: pointer;
+  padding: 10px 18px; border-radius: 999px;
+  font-size: 14px; font-weight: 600; color: var(--ink-2);
+  transition: background .15s ease, color .15s ease;
+  font-family: inherit;
+}
+.billing-opt:hover { color: var(--ink); }
+.billing-opt.is-active {
+  background: var(--green-900); color: #fff;
+}
+.billing-save {
+  font-size: 11px; font-weight: 700; letter-spacing: 0.04em;
+  background: var(--lime); color: var(--green-900);
+  padding: 3px 8px; border-radius: 999px;
+}
+.billing-opt.is-active .billing-save {
+  background: var(--lime); color: var(--green-900);
+}
+@media (prefers-reduced-motion: reduce) {
+  .billing-opt { transition: none; }
+}
+
 .plans { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; align-items: stretch; }
 .plan {
   background: #faf6ec; border: 1px solid var(--line);
