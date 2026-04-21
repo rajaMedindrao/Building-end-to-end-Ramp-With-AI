@@ -35,7 +35,7 @@ export function Nav() {
   return (
     <header className="nav">
       <div className="container nav-inner">
-        <Link className="logo" to="/">ramp</Link>
+        <Link className="logo" to="/">ramp by Surge AI</Link>
         <nav className="nav-links">
           {NAV_LINKS.map(([label, to]) => (
             <Link key={label} to={to}>{label}</Link>
@@ -562,7 +562,7 @@ export function Footer() {
 
         <div className="footer-grid">
           <div className="footer-brand">
-            <Link to="/" className="logo logo-light">ramp</Link>
+            <Link to="/" className="logo logo-light">ramp by Surge AI</Link>
             <p className="brand-tag">The all‑in‑one finance platform for growing businesses.</p>
             <div className="socials">
               <span>𝕏</span><span>in</span><span>▶</span><span>◆</span>
