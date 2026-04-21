@@ -137,7 +137,7 @@ export function LogosStrip() {
     <section className="logos-strip">
       <div className="container">
         <p className="logos-eyebrow">Trusted by 30,000+ teams shaping the future of finance</p>
-        <div className="logos-row reveal reveal-up">
+        <div className="logos-row reveal">
           {logos.map(l => <span key={l} className="logo-pill">{l}</span>)}
         </div>
       </div>
@@ -149,7 +149,7 @@ export function LunchBreak() {
   return (
     <section className="section lunch">
       <div className="container">
-        <div className="section-head reveal reveal-up">
+        <div className="section-head reveal">
           <p className="eyebrow">Why Ramp</p>
           <h2>Give your finance team their lunch break back.</h2>
           <p className="section-sub">
@@ -259,7 +259,7 @@ export function Testimonials() {
   return (
     <section className="section testimonials">
       <div className="container">
-        <div className="section-head center reveal reveal-up">
+        <div className="section-head center reveal">
           <h2>Don’t just take our word for it.</h2>
         </div>
         <div className="t-grid reveal-stagger">
@@ -286,7 +286,7 @@ export function ThreeWays() {
   return (
     <section className="section three-ways">
       <div className="container">
-        <div className="section-head center reveal reveal-up">
+        <div className="section-head center reveal">
           <p className="eyebrow">Three</p>
           <h2>ways we save your company<br />both time and money.</h2>
         </div>
@@ -320,7 +320,7 @@ export function ThreeWays() {
 
 function ThreeWayBlock({ n, title, body, visual, reverse }) {
   return (
-    <div className={`tw-row reveal reveal-up ${reverse ? 'tw-reverse' : ''}`}>
+    <div className={`tw-row reveal ${reverse ? 'tw-reverse' : ''}`}>
       <div className="tw-text">
         <span className="tw-num">{n}</span>
         <h3>{title}</h3>
@@ -402,7 +402,7 @@ export function CustomerGrid() {
   return (
     <section className="section cust-grid">
       <div className="container">
-        <div className="section-head center reveal reveal-up">
+        <div className="section-head center reveal">
           <h2>For startups, global enterprises,<br />and everyone in between.</h2>
         </div>
         <div className="cg-grid reveal-stagger">
@@ -442,7 +442,7 @@ export function MoreTime() {
   return (
     <section className="section more-time">
       <div className="container">
-        <div className="section-head center reveal reveal-up">
+        <div className="section-head center reveal">
           <h2>What would you do with more time?</h2>
         </div>
         <div className="mt-grid reveal-stagger">
@@ -467,7 +467,7 @@ export function MoreTime() {
 export function ForbesCallout() {
   return (
     <section className="section forbes">
-      <div className="container forbes-inner reveal reveal-up">
+      <div className="container forbes-inner reveal">
         <div className="forbes-badge">
           <div className="fb-top">FORBES</div>
           <div className="fb-mid">CLOUD</div>
@@ -500,7 +500,7 @@ export function Footer() {
   return (
     <footer className="footer">
       <div className="container">
-        <div className="footer-cta reveal reveal-up">
+        <div className="footer-cta reveal">
           <div>
             <h2>Time is money. Save both.</h2>
             <p>Join 30,000+ companies running smarter on Ramp.</p>

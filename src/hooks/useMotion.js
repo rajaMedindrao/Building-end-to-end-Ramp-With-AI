@@ -1,43 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
-
-export function usePrefersReducedMotion() {
-  const [reduced, setReduced] = useState(false)
-  useEffect(() => {
-    const mq = window.matchMedia('(prefers-reduced-motion: reduce)')
-    const update = () => setReduced(mq.matches)
-    update()
-    mq.addEventListener?.('change', update)
-    return () => mq.removeEventListener?.('change', update)
-  }, [])
-  return reduced
-}
-
-export function useReveal() {
-  const ref = useRef(null)
-  useEffect(() => {
-    const el = ref.current
-    if (!el) return
-    const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches
-    if (reduce) {
-      el.classList.add('is-visible')
-      return
-    }
-    const io = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((e) => {
-          if (e.isIntersecting) {
-            el.classList.add('is-visible')
-            io.unobserve(el)
-          }
-        })
-      },
-      { threshold: 0.12, rootMargin: '0px 0px -40px 0px' },
-    )
-    io.observe(el)
-    return () => io.disconnect()
-  }, [])
-  return ref
-}
+import { useEffect, useRef } from 'react'
 
 export function useParallax(strength = 0.08) {
   const ref = useRef(null)
