@@ -1,5 +1,7 @@
 import { useState, useEffect } from 'react'
+import { Link } from 'react-router-dom'
 import { useParallax } from '../hooks/useMotion.js'
+import { NAV_LINKS, FOOTER_COLS } from '../routes.js'
 
 export function Nav() {
   const [open, setOpen] = useState(false)
@@ -30,28 +32,18 @@ export function Nav() {
     }
   }, [open])
 
-  const links = [
-    ['Product', true],
-    ['Customers', true],
-    ['Pricing', false],
-    ['Resources', true],
-    ['Company', true],
-  ]
-
   return (
     <header className="nav">
       <div className="container nav-inner">
-        <a className="logo" href="#">ramp</a>
+        <Link className="logo" to="/">ramp</Link>
         <nav className="nav-links">
-          {links.map(([label, caret]) => (
-            <a key={label} href="#">
-              {label} {caret && <span className="caret">▾</span>}
-            </a>
+          {NAV_LINKS.map(([label, to]) => (
+            <Link key={label} to={to}>{label}</Link>
           ))}
         </nav>
         <div className="nav-cta">
-          <a href="#" className="link-light">Sign in</a>
-          <button className="btn btn-lime">Get started</button>
+          <Link to="/sign-in" className="link-light">Sign in</Link>
+          <Link to="/get-started" className="btn btn-lime">Get started</Link>
         </div>
         <button
           className={`nav-burger ${open ? 'is-open' : ''}`}
@@ -71,13 +63,13 @@ export function Nav() {
         {...(!open ? { inert: '' } : {})}
       >
         <nav className="nav-mobile-links">
-          {links.map(([label]) => (
-            <a key={label} href="#" onClick={() => setOpen(false)}>{label}</a>
+          {NAV_LINKS.map(([label, to]) => (
+            <Link key={label} to={to} onClick={() => setOpen(false)}>{label}</Link>
           ))}
         </nav>
         <div className="nav-mobile-cta">
-          <a href="#" className="link-light" onClick={() => setOpen(false)}>Sign in</a>
-          <button className="btn btn-lime" onClick={() => setOpen(false)}>Get started</button>
+          <Link to="/sign-in" className="link-light" onClick={() => setOpen(false)}>Sign in</Link>
+          <Link to="/get-started" className="btn btn-lime" onClick={() => setOpen(false)}>Get started</Link>
         </div>
       </div>
     </header>
@@ -553,13 +545,7 @@ export function ForbesCallout() {
 }
 
 export function Footer() {
-  const cols = [
-    { title: 'Product', items: ['Corporate Cards', 'Bill Pay', 'Expense Management', 'Travel', 'Accounting', 'Procurement'] },
-    { title: 'Company', items: ['About', 'Careers', 'Press', 'Partners', 'Newsroom'] },
-    { title: 'Resources', items: ['Blog', 'Customer stories', 'Help center', 'Guides', 'API docs'] },
-    { title: 'Legal', items: ['Privacy', 'Terms', 'Security', 'Cookie settings'] },
-    { title: 'Contact', items: ['Sales', 'Support', 'Press inquiries', 'hello@ramp.example'] },
-  ]
+  const cols = FOOTER_COLS
   return (
     <footer className="footer">
       <div className="container">
@@ -570,13 +556,13 @@ export function Footer() {
           </div>
           <form className="footer-form" onSubmit={(e) => e.preventDefault()}>
             <input type="email" placeholder="Work email" />
-            <button className="btn btn-lime">Get started</button>
+            <Link to="/get-started" className="btn btn-lime">Get started</Link>
           </form>
         </div>
 
         <div className="footer-grid">
           <div className="footer-brand">
-            <div className="logo logo-light">ramp</div>
+            <Link to="/" className="logo logo-light">ramp</Link>
             <p className="brand-tag">The all‑in‑one finance platform for growing businesses.</p>
             <div className="socials">
               <span>𝕏</span><span>in</span><span>▶</span><span>◆</span>
@@ -585,7 +571,11 @@ export function Footer() {
           {cols.map(col => (
             <div className="footer-col" key={col.title}>
               <h4>{col.title}</h4>
-              <ul>{col.items.map(i => <li key={i}><a href="#">{i}</a></li>)}</ul>
+              <ul>
+                {col.items.map(([label, to]) => (
+                  <li key={label}><Link to={to}>{label}</Link></li>
+                ))}
+              </ul>
             </div>
           ))}
         </div>

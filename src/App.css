@@ -428,6 +428,76 @@ h3 { font-size: clamp(22px, 2.2vw, 28px); line-height: 1.15; }
   font-size: 12px; color: rgba(255,255,255,0.5);
 }
 
+/* ---------- Sub‑pages ---------- */
+.page-stub { background: var(--cream); min-height: 60vh; }
+.page-hero {
+  background: var(--green-900); color: #fff;
+  padding: 88px 0 72px;
+}
+.page-hero h1 {
+  color: #fff; font-size: clamp(40px, 5.4vw, 72px);
+  line-height: 1.02; letter-spacing: -0.035em; margin: 12px 0 16px;
+}
+.page-hero .eyebrow.light { color: var(--lime); }
+.page-intro { color: rgba(255,255,255,0.78); font-size: 18px; max-width: 620px; }
+.page-cta { display: flex; gap: 18px; align-items: center; margin-top: 28px; flex-wrap: wrap; }
+.page-body { max-width: 720px; }
+.page-body h2 { font-size: clamp(28px, 3vw, 40px); margin-bottom: 14px; }
+.page-body p { color: var(--muted); font-size: 17px; margin-bottom: 24px; }
+
+.page-cards { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
+.page-card {
+  background: #faf6ec; border: 1px solid var(--line);
+  border-radius: 16px; padding: 24px;
+  transition: transform .25s ease, box-shadow .25s ease;
+}
+.page-card:hover { transform: translateY(-3px); box-shadow: 0 18px 30px -22px rgba(0,0,0,0.2); }
+.page-card h3 { font-size: 20px; margin-bottom: 8px; }
+.page-card p { color: var(--muted); font-size: 14px; }
+
+.plans { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; align-items: stretch; }
+.plan {
+  background: #faf6ec; border: 1px solid var(--line);
+  border-radius: 18px; padding: 28px;
+  display: flex; flex-direction: column; gap: 14px;
+}
+.plan.plan-hl { background: var(--green-900); color: #fff; border-color: transparent; }
+.plan.plan-hl h3 { color: #fff; }
+.plan.plan-hl .plan-line, .plan.plan-hl li { color: rgba(255,255,255,0.85); }
+.plan h3 { font-size: 22px; }
+.plan-price { font-size: 32px; font-weight: 600; letter-spacing: -0.02em; }
+.plan-line { color: var(--muted); font-size: 14px; }
+.plan ul { display: flex; flex-direction: column; gap: 10px; flex: 1; list-style: none; padding: 0; margin: 0; }
+.plan li { display: flex; align-items: center; gap: 10px; font-size: 14px; }
+.plan-check {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 18px; height: 18px; border-radius: 50%;
+  background: var(--lime); color: var(--green-900);
+  font-size: 11px; font-weight: 700; flex-shrink: 0;
+}
+.plan .btn { align-self: flex-start; margin-top: 8px; }
+
+.page-form {
+  max-width: 420px; margin: 0 auto; display: flex; flex-direction: column; gap: 16px;
+  background: #fff; padding: 28px; border-radius: 16px; border: 1px solid var(--line);
+  box-shadow: 0 16px 30px -22px rgba(0,0,0,0.18);
+}
+.page-form label { display: flex; flex-direction: column; gap: 6px; font-size: 13px; color: var(--ink-2); font-weight: 500; }
+.page-form input {
+  padding: 12px 14px; border-radius: 10px; border: 1px solid var(--line);
+  font-size: 15px; outline: none; background: var(--cream);
+}
+.page-form input:focus { border-color: var(--green-700); }
+.page-form .btn { align-self: stretch; }
+
+@media (max-width: 980px) {
+  .page-cards, .plans { grid-template-columns: 1fr 1fr; }
+}
+@media (max-width: 640px) {
+  .page-cards, .plans { grid-template-columns: 1fr; }
+  .page-hero { padding: 56px 0 48px; }
+}
+
 /* ---------- Motion ----------
    Hidden pre-state is gated on `html.js-motion` so content stays visible
    when JS fails to run (progressive enhancement). */

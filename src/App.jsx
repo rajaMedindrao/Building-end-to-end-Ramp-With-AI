@@ -1,4 +1,10 @@
 import { useEffect } from 'react'
+import {
+  BrowserRouter,
+  Routes,
+  Route,
+  useLocation,
+} from 'react-router-dom'
 import './App.css'
 import {
   Nav,
@@ -12,12 +18,11 @@ import {
   ForbesCallout,
   Footer,
 } from './components/sections.jsx'
+import StubPage from './components/StubPage.jsx'
 
-function useGlobalReveal() {
+function useGlobalReveal(deps) {
   useEffect(() => {
-    // Mark JS as active so hidden pre-state CSS (gated on .js-motion) takes effect.
     document.documentElement.classList.add('js-motion')
-
     const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches
     const els = document.querySelectorAll('.reveal, .reveal-stagger')
     if (reduce) {
@@ -37,14 +42,20 @@ function useGlobalReveal() {
     )
     els.forEach((el) => io.observe(el))
     return () => io.disconnect()
-  }, [])
+  }, deps)
 }
 
-export default function App() {
-  useGlobalReveal()
+function ScrollToTop() {
+  const { pathname } = useLocation()
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: 'instant' in window ? 'instant' : 'auto' })
+  }, [pathname])
+  return null
+}
+
+function HomePage() {
   return (
-    <div className="page">
-      <Nav />
+    <>
       <Hero />
       <LogosStrip />
       <LunchBreak />
@@ -53,7 +64,30 @@ export default function App() {
       <CustomerGrid />
       <MoreTime />
       <ForbesCallout />
+    </>
+  )
+}
+
+function Layout() {
+  const { pathname } = useLocation()
+  useGlobalReveal([pathname])
+  return (
+    <div className="page">
+      <Nav />
+      <Routes>
+        <Route path="/" element={<HomePage />} />
+        <Route path="*" element={<StubPage />} />
+      </Routes>
       <Footer />
     </div>
+  )
+}
+
+export default function App() {
+  return (
+    <BrowserRouter>
+      <ScrollToTop />
+      <Layout />
+    </BrowserRouter>
   )
 }
