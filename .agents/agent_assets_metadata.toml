@@ -1,0 +1,32 @@
+uploads = []
+outputs = []
+
+[[generated]]
+id = "-z0TcfBSUaDmpMMrdO_nV"
+uri = "file://public/og-default.png"
+type = "image"
+title = "ramp og default"
+
+[[generated]]
+id = "c0ljX8ryRpUTO7YWWnxGb"
+uri = "file://public/og-product.png"
+type = "image"
+title = "ramp og product"
+
+[[generated]]
+id = "QL5tvHIjgV6Q8r29FdNfB"
+uri = "file://public/og-pricing.png"
+type = "image"
+title = "ramp og pricing"
+
+[[generated]]
+id = "6-5rW4Q16ySrakM7Uo8FG"
+uri = "file://public/og-company.png"
+type = "image"
+title = "ramp og company"
+
+[[generated]]
+id = "oCqAh2MbgNA0DHmyvmFtt"
+uri = "file://public/og-resources.png"
+type = "image"
+title = "ramp og resources"

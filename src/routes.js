@@ -6,10 +6,23 @@ export const SITE_TAGLINE = 'Time is money. Save both.'
 export const DEFAULT_DESCRIPTION =
   'Ramp is the all‑in‑one finance platform for corporate cards, bill pay, expenses, travel, accounting, and procurement — built to save your team time and money.'
 
+export const DEFAULT_OG_IMAGE = '/og-default.png'
+
+// Section -> branded social preview image. Anything not listed here falls
+// back to DEFAULT_OG_IMAGE.
+const SECTION_IMAGES = {
+  '/': '/og-default.png',
+  '/product': '/og-product.png',
+  '/pricing': '/og-pricing.png',
+  '/company': '/og-company.png',
+  '/resources': '/og-resources.png',
+}
+
 export const HOME_META = {
   title: `${SITE_NAME} — ${SITE_TAGLINE}`,
   description:
     'Ramp combines corporate cards, bill pay, expenses, travel, accounting, and procurement on one platform that saves your team time and money.',
+  image: SECTION_IMAGES['/'],
 }
 
 export const slug = (s) =>
@@ -345,12 +358,24 @@ function findFooterLabel(path) {
   return null
 }
 
-// Resolve title + description for a given pathname. Used by the route layout
-// to keep <title>, meta description, and Open Graph / Twitter tags in sync as
-// the user navigates between pages.
+// Resolve the social preview image for a given pathname. Top-level pages
+// get their own branded image; footer sub-pages inherit their parent
+// section's image (e.g. /product/bill-pay -> /og-product.png).
+function getPageImage(pathname) {
+  if (SECTION_IMAGES[pathname]) return SECTION_IMAGES[pathname]
+  const root = '/' + (pathname.split('/').filter(Boolean)[0] || '')
+  return SECTION_IMAGES[root] || DEFAULT_OG_IMAGE
+}
+
 export function getPageMeta(pathname) {
+  const image = getPageImage(pathname)
+
   if (pathname === '/' || pathname === '') {
-    return { title: HOME_META.title, description: HOME_META.description }
+    return {
+      title: HOME_META.title,
+      description: HOME_META.description,
+      image,
+    }
   }
 
   const top = TOP_PAGES[pathname]
@@ -360,6 +385,7 @@ export function getPageMeta(pathname) {
     return {
       title: `${cleanTitle} | ${SITE_NAME}`,
       description,
+      image,
     }
   }
 
@@ -371,6 +397,7 @@ export function getPageMeta(pathname) {
     return {
       title: `${footer.label} | ${SITE_NAME}`,
       description,
+      image,
     }
   }
 
@@ -384,5 +411,6 @@ export function getPageMeta(pathname) {
     description: section
       ? `${label} — part of Ramp’s ${section.toLowerCase()} section.`
       : DEFAULT_DESCRIPTION,
+    image,
   }
 }

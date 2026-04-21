@@ -34,9 +34,11 @@ function setMetaTag(selector, attr, value) {
 
 function usePageMeta(pathname) {
   useEffect(() => {
-    const { title, description } = getPageMeta(pathname)
+    const { title, description, image } = getPageMeta(pathname)
     document.title = title
-    const url = window.location.origin + pathname
+    const origin = window.location.origin
+    const url = origin + pathname
+    const imageUrl = image ? origin + image : undefined
     setMetaTag('meta[name="description"]', 'content', description)
     setMetaTag('meta[property="og:title"]', 'content', title)
     setMetaTag('meta[property="og:description"]', 'content', description)
@@ -45,6 +47,14 @@ function usePageMeta(pathname) {
     setMetaTag('meta[name="twitter:card"]', 'content', 'summary_large_image')
     setMetaTag('meta[name="twitter:title"]', 'content', title)
     setMetaTag('meta[name="twitter:description"]', 'content', description)
+    if (imageUrl) {
+      setMetaTag('meta[property="og:image"]', 'content', imageUrl)
+      setMetaTag('meta[property="og:image:width"]', 'content', '1200')
+      setMetaTag('meta[property="og:image:height"]', 'content', '630')
+      setMetaTag('meta[property="og:image:alt"]', 'content', title)
+      setMetaTag('meta[name="twitter:image"]', 'content', imageUrl)
+      setMetaTag('meta[name="twitter:image:alt"]', 'content', title)
+    }
   }, [pathname])
 }
 
