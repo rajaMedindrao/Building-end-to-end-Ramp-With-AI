@@ -1,3 +1,5 @@
+import { useParallax } from '../hooks/useMotion.js'
+
 export function Nav() {
   return (
     <header className="nav">
@@ -20,6 +22,7 @@ export function Nav() {
 }
 
 export function Hero() {
+  const visualRef = useParallax(0.06)
   return (
     <section className="hero">
       <div className="container hero-inner">
@@ -39,7 +42,11 @@ export function Hero() {
           </p>
         </div>
         <div className="hero-visual">
-          <ProductMock />
+          <div className="hero-parallax" ref={visualRef}>
+            <div className="hero-float">
+              <ProductMock />
+            </div>
+          </div>
         </div>
       </div>
     </section>
@@ -130,7 +137,7 @@ export function LogosStrip() {
     <section className="logos-strip">
       <div className="container">
         <p className="logos-eyebrow">Trusted by 30,000+ teams shaping the future of finance</p>
-        <div className="logos-row">
+        <div className="logos-row reveal reveal-up">
           {logos.map(l => <span key={l} className="logo-pill">{l}</span>)}
         </div>
       </div>
@@ -142,7 +149,7 @@ export function LunchBreak() {
   return (
     <section className="section lunch">
       <div className="container">
-        <div className="section-head">
+        <div className="section-head reveal reveal-up">
           <p className="eyebrow">Why Ramp</p>
           <h2>Give your finance team their lunch break back.</h2>
           <p className="section-sub">
@@ -150,7 +157,7 @@ export function LunchBreak() {
             platform that handles cards, bills, expenses, accounting, and more.
           </p>
         </div>
-        <div className="feature-grid">
+        <div className="feature-grid reveal-stagger">
           <FeatureCard
             badge="Bill Pay"
             title="Process more invoices with less work."
@@ -252,10 +259,10 @@ export function Testimonials() {
   return (
     <section className="section testimonials">
       <div className="container">
-        <div className="section-head center">
+        <div className="section-head center reveal reveal-up">
           <h2>Don’t just take our word for it.</h2>
         </div>
-        <div className="t-grid">
+        <div className="t-grid reveal-stagger">
           {tiles.map((t, i) => (
             <article key={i} className={`t-card t-${t.tone}`}>
               <div className="t-photo">
@@ -279,7 +286,7 @@ export function ThreeWays() {
   return (
     <section className="section three-ways">
       <div className="container">
-        <div className="section-head center">
+        <div className="section-head center reveal reveal-up">
           <p className="eyebrow">Three</p>
           <h2>ways we save your company<br />both time and money.</h2>
         </div>
@@ -313,7 +320,7 @@ export function ThreeWays() {
 
 function ThreeWayBlock({ n, title, body, visual, reverse }) {
   return (
-    <div className={`tw-row ${reverse ? 'tw-reverse' : ''}`}>
+    <div className={`tw-row reveal reveal-up ${reverse ? 'tw-reverse' : ''}`}>
       <div className="tw-text">
         <span className="tw-num">{n}</span>
         <h3>{title}</h3>
@@ -395,10 +402,10 @@ export function CustomerGrid() {
   return (
     <section className="section cust-grid">
       <div className="container">
-        <div className="section-head center">
+        <div className="section-head center reveal reveal-up">
           <h2>For startups, global enterprises,<br />and everyone in between.</h2>
         </div>
-        <div className="cg-grid">
+        <div className="cg-grid reveal-stagger">
           {cells.map((c, i) => (
             <div className="cg-cell" key={i}>
               <div className="cg-logo">{c.logo}</div>
@@ -435,10 +442,10 @@ export function MoreTime() {
   return (
     <section className="section more-time">
       <div className="container">
-        <div className="section-head center">
+        <div className="section-head center reveal reveal-up">
           <h2>What would you do with more time?</h2>
         </div>
-        <div className="mt-grid">
+        <div className="mt-grid reveal-stagger">
           {cards.map((c, i) => (
             <article key={i} className={`mt-card mt-${c.tone}`}>
               <blockquote>“{c.quote}”</blockquote>
@@ -460,7 +467,7 @@ export function MoreTime() {
 export function ForbesCallout() {
   return (
     <section className="section forbes">
-      <div className="container forbes-inner">
+      <div className="container forbes-inner reveal reveal-up">
         <div className="forbes-badge">
           <div className="fb-top">FORBES</div>
           <div className="fb-mid">CLOUD</div>
@@ -493,7 +500,7 @@ export function Footer() {
   return (
     <footer className="footer">
       <div className="container">
-        <div className="footer-cta">
+        <div className="footer-cta reveal reveal-up">
           <div>
             <h2>Time is money. Save both.</h2>
             <p>Join 30,000+ companies running smarter on Ramp.</p>
