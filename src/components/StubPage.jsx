@@ -13,7 +13,7 @@ function resolveByBilling(value, billing) {
   return value
 }
 
-function BillingToggle({ billing, onChange }) {
+function BillingToggle({ billing, onChange, savingsLabel }) {
   return (
     <div className="billing-toggle" role="group" aria-label="Billing period">
       {BILLING_MODES.map((mode) => (
@@ -25,7 +25,9 @@ function BillingToggle({ billing, onChange }) {
           onClick={() => onChange(mode)}
         >
           {mode === 'monthly' ? 'Monthly' : 'Annual'}
-          {mode === 'annual' && <span className="billing-save">Save 20%</span>}
+          {mode === 'annual' && savingsLabel && (
+            <span className="billing-save">{savingsLabel}</span>
+          )}
         </button>
       ))}
     </div>
@@ -144,7 +146,7 @@ function TopPage({ page }) {
     else params.set('billing', next)
     setSearchParams(params, { replace: true })
   }
-  const showBillingToggle = !!page.plans && page.eyebrow === 'Pricing'
+  const showBillingToggle = !!page.plans && !!page.billingToggle
   const billingRow = page.billingPricing
     ? { title: page.billingPricing.title, row: page.billingPricing[billing] }
     : null
@@ -182,7 +184,11 @@ function TopPage({ page }) {
         <section className="section">
           <div className="container">
             {showBillingToggle && (
-              <BillingToggle billing={billing} onChange={setBilling} />
+              <BillingToggle
+                billing={billing}
+                onChange={setBilling}
+                savingsLabel={page.billingToggle.savingsLabel}
+              />
             )}
             <div className="plans">
               {page.plans.map((p) => {

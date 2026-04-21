@@ -166,6 +166,7 @@ export const TOP_PAGES = {
         ],
       },
     ],
+    billingToggle: { savingsLabel: 'Save 20%' },
     billingPricing: {
       title: 'Pricing',
       monthly: ['Price', 'Free', '$15 / user / mo', 'Custom'],
