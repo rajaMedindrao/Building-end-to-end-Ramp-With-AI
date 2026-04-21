@@ -150,6 +150,73 @@ export const TOP_PAGES = {
         ],
       },
     ],
+    comparison: {
+      columns: ['Ramp', 'Ramp Plus', 'Ramp Enterprise'],
+      groups: [
+        {
+          title: 'Cards & spend',
+          rows: [
+            ['Unlimited corporate cards', true, true, true],
+            ['Cashback on every swipe', 'Up to 1.5%', 'Up to 1.5%', 'Custom'],
+            ['Custom spend controls', 'Basic', 'Advanced', 'Advanced'],
+            ['Vendor & category limits', false, true, true],
+          ],
+        },
+        {
+          title: 'Bills, expenses & travel',
+          rows: [
+            ['Bill Pay & expense management', true, true, true],
+            ['Custom approval workflows', false, true, true],
+            ['Travel booking & policies', 'Standard', 'Standard', 'Premium'],
+            ['Procurement & intake', false, true, true],
+          ],
+        },
+        {
+          title: 'Accounting & controls',
+          rows: [
+            ['QuickBooks, NetSuite, Xero sync', true, true, true],
+            ['Multi‑entity & multi‑currency', false, true, true],
+            ['Custom integrations & SSO', false, false, true],
+            ['Audit trail & SOC 2 reports', true, true, true],
+          ],
+        },
+        {
+          title: 'Support',
+          rows: [
+            ['Email & chat support', true, true, true],
+            ['Priority support', false, true, true],
+            ['Dedicated account team', false, false, true],
+            ['Custom SLA', false, false, true],
+          ],
+        },
+      ],
+    },
+    faqs: [
+      {
+        q: 'Is Ramp really free?',
+        a: 'Yes. The base Ramp plan is free forever — no per‑user fees, no setup costs, no card fees. We make money on interchange when your team swipes the card, and you keep up to 1.5% cashback on every transaction.',
+      },
+      {
+        q: 'How does the cashback work?',
+        a: 'You earn cashback automatically on eligible card spend, paid as a statement credit each month. Effective rates depend on plan and merchant category, but most customers see between 1% and 1.5% back on the bulk of their spend.',
+      },
+      {
+        q: 'Are there any hidden fees?',
+        a: 'No foreign transaction fees, no card replacement fees, no annual fees. Ramp Plus is a flat per‑user monthly price and Enterprise is a custom contract — both are quoted upfront with everything included.',
+      },
+      {
+        q: 'Do I have to sign a long contract?',
+        a: 'No. Ramp Plus is billed month‑to‑month and you can downgrade or cancel any time from your admin settings. Enterprise contracts are typically annual but always negotiated transparently.',
+      },
+      {
+        q: 'Can I cancel and keep my data?',
+        a: 'Yes. You can export every card, transaction, receipt, and report at any time as CSV or PDF. If you cancel, your historical data stays accessible in read‑only mode for 12 months.',
+      },
+      {
+        q: 'How long does setup take?',
+        a: 'Most teams are issuing their first cards within 15 minutes. Connecting your accounting software, importing vendors, and inviting your team typically takes a single afternoon.',
+      },
+    ],
   },
   '/resources': {
     eyebrow: 'Resources',

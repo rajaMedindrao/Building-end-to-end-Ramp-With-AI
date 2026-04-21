@@ -1,5 +1,62 @@
+import { useState } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import { TOP_PAGES } from '../routes.js'
+
+function Cell({ value }) {
+  if (value === true) return <span className="cmp-yes" aria-label="Included">✓</span>
+  if (value === false) return <span className="cmp-no" aria-label="Not included">—</span>
+  return <span className="cmp-text">{value}</span>
+}
+
+function ComparisonTable({ data }) {
+  return (
+    <div className="cmp-wrap">
+      <table className="cmp">
+        <caption className="sr-only">
+          Feature comparison across Ramp, Ramp Plus, and Ramp Enterprise plans.
+        </caption>
+        <thead>
+          <tr>
+            <th scope="col" className="cmp-feat-h">Feature</th>
+            {data.columns.map((c, i) => (
+              <th key={c} scope="col" className={i === 1 ? 'cmp-hl' : ''}>{c}</th>
+            ))}
+          </tr>
+        </thead>
+        {data.groups.map((g) => (
+          <tbody key={g.title}>
+            <tr className="cmp-group">
+              <th scope="rowgroup" colSpan={data.columns.length + 1}>{g.title}</th>
+            </tr>
+            {g.rows.map(([feat, ...vals]) => (
+              <tr key={`${g.title}-${feat}`}>
+                <th scope="row" className="cmp-feat">{feat}</th>
+                {vals.map((v, i) => (
+                  <td key={i} className={i === 1 ? 'cmp-hl' : ''}>
+                    <Cell value={v} />
+                  </td>
+                ))}
+              </tr>
+            ))}
+          </tbody>
+        ))}
+      </table>
+    </div>
+  )
+}
+
+function FaqItem({ q, a, defaultOpen }) {
+  const [open, setOpen] = useState(!!defaultOpen)
+  return (
+    <details className="faq-item" open={open} onToggle={(e) => setOpen(e.currentTarget.open)}>
+      <summary>
+        <span>{q}</span>
+        <span className="faq-toggle" aria-hidden="true">{open ? '–' : '+'}</span>
+      </summary>
+      <p>{a}</p>
+    </details>
+  )
+}
 
 function titleize(slug) {
   return slug
@@ -93,6 +150,34 @@ function TopPage({ page }) {
                     {p.price === 'Talk to us' ? 'Contact sales' : 'Get started'}
                   </Link>
                 </article>
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
+
+      {page.comparison && (
+        <section className="section pricing-cmp">
+          <div className="container">
+            <div className="section-head center reveal">
+              <h2>Compare every plan</h2>
+              <p>The full feature list, side by side. No asterisks.</p>
+            </div>
+            <ComparisonTable data={page.comparison} />
+          </div>
+        </section>
+      )}
+
+      {page.faqs && (
+        <section className="section pricing-faq">
+          <div className="container">
+            <div className="section-head center reveal">
+              <h2>Pricing questions, answered</h2>
+              <p>Everything teams ask before they switch to Ramp.</p>
+            </div>
+            <div className="faq-list">
+              {page.faqs.map((f, i) => (
+                <FaqItem key={f.q} q={f.q} a={f.a} defaultOpen={i === 0} />
               ))}
             </div>
           </div>
