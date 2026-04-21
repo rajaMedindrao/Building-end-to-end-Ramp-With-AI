@@ -34,6 +34,89 @@ function BillingToggle({ billing, onChange, savingsLabel }) {
   )
 }
 
+const usd = (n) =>
+  new Intl.NumberFormat('en-US', {
+    style: 'currency',
+    currency: 'USD',
+    maximumFractionDigits: 0,
+  }).format(Math.max(0, Math.round(n)))
+
+function SavingsCalculator({ config }) {
+  const {
+    title,
+    intro,
+    cashbackRate,
+    defaultSpend,
+    minSpend = 0,
+    maxSpend = 1000000,
+    stepSpend = 1000,
+    note,
+  } = config
+  const [spend, setSpend] = useState(defaultSpend)
+  const monthly = spend * cashbackRate
+  const annual = monthly * 12
+  const ratePct = (cashbackRate * 100).toLocaleString('en-US', {
+    maximumFractionDigits: 2,
+  })
+
+  const onChange = (e) => {
+    const v = Number(e.target.value)
+    setSpend(Number.isFinite(v) ? v : 0)
+  }
+
+  return (
+    <section className="section savings">
+      <div className="container">
+        <div className="savings-card">
+          <div className="savings-copy">
+            <h3>{title}</h3>
+            <p>{intro}</p>
+          </div>
+          <div className="savings-controls">
+            <label className="savings-input" htmlFor="savings-spend">
+              <span>Average monthly card spend</span>
+              <div className="savings-input-row">
+                <span className="savings-prefix" aria-hidden="true">$</span>
+                <input
+                  id="savings-spend"
+                  type="number"
+                  inputMode="numeric"
+                  min={minSpend}
+                  max={maxSpend}
+                  step={stepSpend}
+                  value={spend}
+                  onChange={onChange}
+                />
+              </div>
+            </label>
+            <input
+              type="range"
+              aria-label="Average monthly card spend slider"
+              min={minSpend}
+              max={maxSpend}
+              step={stepSpend}
+              value={Math.min(Math.max(spend, minSpend), maxSpend)}
+              onChange={onChange}
+              className="savings-range"
+            />
+          </div>
+          <div className="savings-results" aria-live="polite">
+            <div className="savings-stat">
+              <span className="savings-stat-label">Estimated monthly cashback</span>
+              <span className="savings-stat-value">{usd(monthly)}</span>
+            </div>
+            <div className="savings-stat savings-stat-hl">
+              <span className="savings-stat-label">Estimated annual cashback</span>
+              <span className="savings-stat-value">{usd(annual)}</span>
+            </div>
+          </div>
+          <p className="savings-note">{note || `Estimates use a ${ratePct}% cashback rate.`}</p>
+        </div>
+      </div>
+    </section>
+  )
+}
+
 function Cell({ value }) {
   if (value === true) return <span className="cmp-yes" aria-label="Included">✓</span>
   if (value === false) return <span className="cmp-no" aria-label="Not included">—</span>
@@ -226,6 +309,10 @@ function TopPage({ page }) {
             <ComparisonTable data={page.comparison} billingRow={billingRow} />
           </div>
         </section>
+      )}
+
+      {page.savingsCalculator && (
+        <SavingsCalculator config={page.savingsCalculator} />
       )}
 
       {page.faqs && (

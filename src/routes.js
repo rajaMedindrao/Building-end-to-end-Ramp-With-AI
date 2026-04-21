@@ -167,6 +167,17 @@ export const TOP_PAGES = {
       },
     ],
     billingToggle: { savingsLabel: 'Save 20%' },
+    savingsCalculator: {
+      title: 'Estimate your cashback',
+      intro:
+        'Enter your team’s average monthly card spend and we’ll show you what Ramp’s cashback could add up to.',
+      cashbackRate: 0.015,
+      defaultSpend: 50000,
+      minSpend: 1000,
+      maxSpend: 1000000,
+      stepSpend: 1000,
+      note: 'Estimates use Ramp’s headline 1.5% cashback rate. Actual rates depend on your plan and merchant category.',
+    },
     billingPricing: {
       title: 'Pricing',
       monthly: ['Price', 'Free', '$15 / user / mo', 'Custom'],
