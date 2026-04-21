@@ -1,0 +1,5 @@
+# robots.txt for https://ramp.example
+User-agent: *
+Allow: /
+
+Sitemap: https://ramp.example/sitemap.xml
