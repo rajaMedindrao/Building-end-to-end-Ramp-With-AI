@@ -1,0 +1,15 @@
+node_modules
+dist
+data
+.git
+.gitignore
+.local
+.replit
+replit.nix
+attached_assets
+*.log
+.env
+.env.*
+README.md
+DEPLOY.md
+.local/.commit_message

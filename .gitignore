@@ -2,3 +2,9 @@ node_modules/
 dist/
 .env
 .env.local
+
+# Local SQLite database — never commit
+data/
+*.db
+*.db-shm
+*.db-wal
