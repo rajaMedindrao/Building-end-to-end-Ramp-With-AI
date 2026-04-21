@@ -1,4 +1,5 @@
 import Database from 'better-sqlite3'
+import crypto from 'node:crypto'
 import { mkdirSync } from 'node:fs'
 import { dirname, resolve } from 'node:path'
 
@@ -9,6 +10,23 @@ export const db = new Database(DB_PATH)
 db.pragma('journal_mode = WAL')
 db.pragma('foreign_keys = ON')
 
+// scrypt-based password hashing. Stored as `${saltHex}:${hashHex}` so we
+// don't need a separate column for the salt and don't need to add a new
+// npm dep just for password hashing.
+export function hashPassword(plain) {
+  const salt = crypto.randomBytes(16)
+  const hash = crypto.scryptSync(String(plain), salt, 64)
+  return `${salt.toString('hex')}:${hash.toString('hex')}`
+}
+export function verifyPassword(plain, stored) {
+  if (!stored || typeof stored !== 'string' || !stored.includes(':')) return false
+  const [saltHex, hashHex] = stored.split(':')
+  const salt = Buffer.from(saltHex, 'hex')
+  const expected = Buffer.from(hashHex, 'hex')
+  const got = crypto.scryptSync(String(plain), salt, expected.length)
+  return expected.length === got.length && crypto.timingSafeEqual(expected, got)
+}
+
 export function initSchema() {
   db.exec(`
     CREATE TABLE IF NOT EXISTS employees (
@@ -17,7 +35,9 @@ export function initSchema() {
       email TEXT NOT NULL UNIQUE,
       department TEXT NOT NULL,
       role TEXT NOT NULL DEFAULT 'employee',
-      manager_id INTEGER REFERENCES employees(id)
+      manager_id INTEGER REFERENCES employees(id),
+      password_hash TEXT,
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     );
 
     CREATE TABLE IF NOT EXISTS cards (
@@ -71,7 +91,8 @@ export function seedIfEmpty() {
   if (row.c > 0) return
 
   const insertEmp = db.prepare(
-    'INSERT INTO employees (name, email, department, role, manager_id) VALUES (?, ?, ?, ?, ?)',
+    `INSERT INTO employees (name, email, department, role, manager_id, password_hash)
+     VALUES (?, ?, ?, ?, ?, ?)`,
   )
   const insertCard = db.prepare(
     `INSERT INTO cards
@@ -79,16 +100,25 @@ export function seedIfEmpty() {
      VALUES (?, ?, ?, ?, ?, ?, ?)`,
   )
 
+  // Single shared password for the demo accounts. Hashed once and reused
+  // so the seed transaction stays cheap.
+  const sharedHash = hashPassword('surgeai')
+
   db.transaction(() => {
-    // Three users only. Raja is the top-level manager and approves
-    // every card in the seed (including his own — he's his own approver
-    // so his over-$500 charges still flow through the same queue).
-    const raja = insertEmp.run('Raja Surge', 'raja@surgeai.com', 'Operations', 'manager', null)
-      .lastInsertRowid
-    const nick = insertEmp.run('Nick Patel', 'nick@surgeai.com', 'Product', 'employee', raja)
-      .lastInsertRowid
-    const sully = insertEmp.run('Sully Reyes', 'sully@surgeai.com', 'Chief of Staff', 'employee', raja)
-      .lastInsertRowid
+    // Four seed users — all managers so each can both submit transactions
+    // and approve queued ones in the demo.
+    const raja = insertEmp.run(
+      'Raja Surge', 'raja@surgehq.ai', 'Operations', 'manager', null, sharedHash,
+    ).lastInsertRowid
+    const sully = insertEmp.run(
+      'Sullivan Surge', 'sullivanwhitely@surgehq.ai', 'Chief of Staff', 'manager', raja, sharedHash,
+    ).lastInsertRowid
+    const nick = insertEmp.run(
+      'Nick Surge', 'nickheiner@surgehq.ai', 'Product', 'manager', raja, sharedHash,
+    ).lastInsertRowid
+    insertEmp.run(
+      'Surge', 'surge@surgehq.ai', 'Company', 'manager', raja, sharedHash,
+    )
 
     insertCard.run(raja, raja, 'Raja Ops Card', 'physical', 1000000, 'active', '[]')
     insertCard.run(nick, raja, 'Nick Prod Card', 'physical', 500000, 'active', '[]')
@@ -99,9 +129,6 @@ export function seedIfEmpty() {
 initSchema()
 seedIfEmpty()
 
-// One-line schema summary at boot so the user can see in the workflow
-// log that the SQLite tables actually exist (they don't show up in
-// Replit's database pane because that's Postgres-only).
 export function logSchemaSummary() {
   const tables = db
     .prepare("SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%'")

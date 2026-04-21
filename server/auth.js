@@ -1,14 +1,6 @@
 import crypto from 'node:crypto'
-import { db } from './db.js'
+import { db, verifyPassword } from './db.js'
 
-const HARDCODED = {
-  email: 'raja@surgeai.com',
-  password: 'surgeai',
-}
-// Fail fast in production if no real secret was provided. The dev fallback
-// is only acceptable when NODE_ENV !== 'production' so that local runs and
-// CI don't require any setup, but a missing prod secret would let an
-// attacker mint forged cookies and impersonate any user.
 const isProd = process.env.NODE_ENV === 'production'
 if (isProd && !process.env.SESSION_SECRET) {
   throw new Error('SESSION_SECRET must be set in production')
@@ -41,12 +33,16 @@ function verify(token) {
   }
 }
 
+// Look the user up in the employees table (which doubles as our login
+// table) and verify their scrypt-hashed password. Anyone in the table
+// with a password_hash can sign in — login is therefore controlled by
+// the data, not by a hardcoded constant.
 export function tryLogin(email, password) {
   const e = String(email || '').trim().toLowerCase()
-  if (e !== HARDCODED.email || password !== HARDCODED.password) return null
-  const user = db.prepare('SELECT * FROM employees WHERE email = ?').get(HARDCODED.email)
-  if (!user) return null
-  return user
+  if (!e || !password) return null
+  const user = db.prepare('SELECT * FROM employees WHERE LOWER(email) = ?').get(e)
+  if (!user || !user.password_hash) return null
+  return verifyPassword(password, user.password_hash) ? user : null
 }
 
 export function setSessionCookie(res, user) {
@@ -54,7 +50,7 @@ export function setSessionCookie(res, user) {
   res.cookie(COOKIE, token, {
     httpOnly: true,
     sameSite: 'lax',
-    secure: process.env.NODE_ENV === 'production',
+    secure: isProd,
     maxAge: MAX_AGE_MS,
     path: '/',
   })

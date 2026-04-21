@@ -23,6 +23,7 @@ import { getPageMeta } from './routes.js'
 import { AuthProvider } from './auth/AuthContext.jsx'
 import ProtectedRoute from './auth/ProtectedRoute.jsx'
 import SignIn from './pages/SignIn.jsx'
+import SignUp from './pages/SignUp.jsx'
 import AppDashboard from './pages/AppDashboard.jsx'
 
 function setMetaTag(selector, attr, value) {
@@ -130,10 +131,16 @@ function Layout() {
   const { pathname } = useLocation()
   // The /signin and /app routes are full-bleed product surfaces — they
   // don't share the marketing nav/footer chrome.
-  if (pathname === '/signin' || pathname === '/app' || pathname.startsWith('/app/')) {
+  if (
+    pathname === '/signin' ||
+    pathname === '/signup' ||
+    pathname === '/app' ||
+    pathname.startsWith('/app/')
+  ) {
     return (
       <Routes>
         <Route path="/signin" element={<SignIn />} />
+        <Route path="/signup" element={<SignUp />} />
         <Route
           path="/app"
           element={

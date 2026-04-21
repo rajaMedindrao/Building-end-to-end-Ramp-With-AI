@@ -1162,3 +1162,33 @@ h3 { font-size: clamp(22px, 2.2vw, 28px); line-height: 1.15; }
   .app-bar-left { flex-direction: column; align-items: flex-start; gap: 0.75rem; width: 100%; }
   .app-tabs { flex-wrap: wrap; }
 }
+
+/* === Demo accounts list on the sign-in page === */
+.auth-accounts {
+  list-style: none;
+  padding: 0;
+  margin: 0 0 1.25rem;
+  display: grid;
+  gap: 0.5rem;
+}
+.auth-account {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  align-items: flex-start;
+  background: rgba(17,52,46,0.04);
+  border: 1px solid rgba(17,52,46,0.1);
+  border-radius: 10px;
+  padding: 0.55rem 0.8rem;
+  font: inherit;
+  color: var(--green-900);
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s;
+}
+.auth-account:hover { background: rgba(17,52,46,0.08); border-color: rgba(17,52,46,0.2); }
+.auth-account code {
+  font-size: 0.85rem;
+  color: rgba(17,52,46,0.7);
+}
+.auth-foot .dot { margin: 0 0.5rem; color: rgba(17,52,46,0.4); }

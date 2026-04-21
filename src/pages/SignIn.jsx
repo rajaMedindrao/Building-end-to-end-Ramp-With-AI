@@ -2,11 +2,18 @@ import { useEffect, useState } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { useAuth } from '../auth/AuthContext.jsx'
 
+const DEMO_ACCOUNTS = [
+  { name: 'Raja Surge', email: 'raja@surgehq.ai' },
+  { name: 'Sullivan Surge', email: 'sullivanwhitely@surgehq.ai' },
+  { name: 'Nick Surge', email: 'nickheiner@surgehq.ai' },
+  { name: 'Surge', email: 'surge@surgehq.ai' },
+]
+
 export default function SignIn() {
   const { user, login } = useAuth()
   const navigate = useNavigate()
   const location = useLocation()
-  const [email, setEmail] = useState('raja@surgeai.com')
+  const [email, setEmail] = useState('raja@surgehq.ai')
   const [password, setPassword] = useState('')
   const [error, setError] = useState(null)
   const [busy, setBusy] = useState(false)
@@ -39,8 +46,28 @@ export default function SignIn() {
         </Link>
         <h1>Sign in</h1>
         <p className="auth-sub">
-          Use <code>raja@surgeai.com</code> with the password <code>surgeai</code>.
+          Pick any of the four demo accounts below. The password is{' '}
+          <code>surgeai</code> for all of them.
         </p>
+
+        <ul className="auth-accounts">
+          {DEMO_ACCOUNTS.map((a) => (
+            <li key={a.email}>
+              <button
+                type="button"
+                className="auth-account"
+                onClick={() => {
+                  setEmail(a.email)
+                  setPassword('surgeai')
+                }}
+              >
+                <strong>{a.name}</strong>
+                <code>{a.email}</code>
+              </button>
+            </li>
+          ))}
+        </ul>
+
         <form onSubmit={onSubmit} className="auth-form" noValidate>
           <label>
             <span>Work email</span>
@@ -48,7 +75,7 @@ export default function SignIn() {
               type="email"
               autoComplete="username"
               required
-              placeholder="raja@surgeai.com"
+              placeholder="raja@surgehq.ai"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
             />
@@ -74,7 +101,9 @@ export default function SignIn() {
           </button>
         </form>
         <p className="auth-foot">
-          <Link to="/">← Back to home</Link>
+          New here? <Link to="/signup">Create an account</Link>
+          <span className="dot">·</span>
+          <Link to="/">Back to home</Link>
         </p>
       </div>
     </main>

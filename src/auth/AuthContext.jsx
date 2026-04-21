@@ -39,8 +39,23 @@ export function AuthProvider({ children }) {
     }
   }, [])
 
+  // Re-fetch the current session — used right after signup so the
+  // freshly issued cookie's user is hydrated into context.
+  const refresh = useCallback(async () => {
+    try {
+      const r = await api.me()
+      setUser(r.user)
+      return r.user
+    } catch {
+      setUser(null)
+      return null
+    }
+  }, [])
+
   return (
-    <AuthCtx.Provider value={{ user, loading, login, logout }}>{children}</AuthCtx.Provider>
+    <AuthCtx.Provider value={{ user, loading, login, logout, refresh }}>
+      {children}
+    </AuthCtx.Provider>
   )
 }
 
