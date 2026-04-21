@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, NavLink } from 'react-router-dom'
 import { useParallax } from '../hooks/useMotion.js'
 import { NAV_LINKS, FOOTER_COLS } from '../routes.js'
 
@@ -38,7 +38,7 @@ export function Nav() {
         <Link className="logo" to="/">ramp by Surge AI</Link>
         <nav className="nav-links">
           {NAV_LINKS.map(([label, to]) => (
-            <Link key={label} to={to}>{label}</Link>
+            <NavLink key={label} to={to} end={to === '/'}>{label}</NavLink>
           ))}
         </nav>
         <div className="nav-cta">
@@ -64,7 +64,7 @@ export function Nav() {
       >
         <nav className="nav-mobile-links">
           {NAV_LINKS.map(([label, to]) => (
-            <Link key={label} to={to} onClick={() => setOpen(false)}>{label}</Link>
+            <NavLink key={label} to={to} end={to === '/'} onClick={() => setOpen(false)}>{label}</NavLink>
           ))}
         </nav>
         <div className="nav-mobile-cta">
