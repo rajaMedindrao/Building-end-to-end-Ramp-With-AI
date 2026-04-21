@@ -1,6 +1,17 @@
 // Single source of truth for nav + footer routes.
 // Each entry: { label, path, eyebrow, title, intro, sections }
 
+export const SITE_NAME = 'Ramp'
+export const SITE_TAGLINE = 'Time is money. Save both.'
+export const DEFAULT_DESCRIPTION =
+  'Ramp is the all‑in‑one finance platform for corporate cards, bill pay, expenses, travel, accounting, and procurement — built to save your team time and money.'
+
+export const HOME_META = {
+  title: `${SITE_NAME} — ${SITE_TAGLINE}`,
+  description:
+    'Ramp combines corporate cards, bill pay, expenses, travel, accounting, and procurement on one platform that saves your team time and money.',
+}
+
 export const slug = (s) =>
   s.toLowerCase()
     .replace(/[^a-z0-9]+/g, '-')
@@ -180,4 +191,131 @@ export const TOP_PAGES = {
       'No credit card required. Get set up in minutes and start saving on the next swipe.',
     form: 'sign-up',
   },
+}
+
+// Short, search/social-friendly descriptions per top page. Falls back to the
+// page intro if a path is missing here.
+const TOP_PAGE_DESCRIPTIONS = {
+  '/product':
+    'Cards, bill pay, expenses, travel, accounting, and procurement — every finance workflow on one Ramp platform.',
+  '/customers':
+    '30,000+ finance teams, from startups to enterprises, use Ramp to close the books faster and reclaim hours each week.',
+  '/pricing':
+    'Ramp is free for every business. Upgrade to Ramp Plus or Enterprise when your finance team needs more controls and scale.',
+  '/resources':
+    'Guides, customer stories, product updates, and API docs to help your team get more out of Ramp and every dollar.',
+  '/company':
+    'Meet the team building the all‑in‑one finance platform — our mission, careers, press, and partners.',
+  '/sign-in': 'Sign in to your Ramp account with your work email.',
+  '/get-started':
+    'Create a Ramp account in minutes — no credit card required — and start saving on the next swipe.',
+}
+
+// Short descriptions for footer sub-pages. Falls back to a sensible default
+// generated from the page title and parent section.
+const SUB_PAGE_DESCRIPTIONS = {
+  '/product/corporate-cards':
+    'Issue physical and virtual corporate cards with built‑in spend controls, real‑time visibility, and up to 1.5% cashback.',
+  '/product/bill-pay':
+    'Capture, code, approve, and pay every bill from one inbox — with automatic accounting sync.',
+  '/product/expense-management':
+    'Receipts collected, categorized, and submitted automatically so your team can stop chasing expense reports.',
+  '/product/travel':
+    'Book business travel with policy enforcement, live spend visibility, and zero out‑of‑pocket expenses.',
+  '/product/accounting':
+    'Real‑time, two‑way sync with QuickBooks, NetSuite, Xero, and Sage to close the books faster.',
+  '/product/procurement':
+    'Request, approve, and track every dollar before it leaves — purchase orders and intake all in one place.',
+  '/company/about':
+    'Learn about Ramp’s mission, values, and the team building the all‑in‑one finance platform.',
+  '/company/careers':
+    'Join Ramp. We’re hiring across product, engineering, design, and finance to build the future of finance.',
+  '/company/press': 'Press releases, brand assets, and media inquiries for Ramp.',
+  '/company/partners':
+    'Accountants, agencies, and integration partners who help customers get more out of Ramp.',
+  '/company/newsroom':
+    'Product launches, milestones, and the latest news from the Ramp team.',
+  '/resources/blog':
+    'Trends, tips, and product news from the Ramp team for modern finance leaders.',
+  '/resources/customer-stories':
+    'See how real finance teams use Ramp to save time, close the books faster, and grow with confidence.',
+  '/resources/help-center':
+    'Step‑by‑step product documentation and answers to common questions about Ramp.',
+  '/resources/guides':
+    'In‑depth playbooks on closing the books, building controls, and running a modern finance team.',
+  '/resources/api-docs':
+    'Build with Ramp using our REST and webhook APIs — reference, examples, and guides for developers.',
+  '/legal/privacy':
+    'How Ramp collects, uses, and protects personal information across our products and services.',
+  '/legal/terms':
+    'The terms and conditions that govern your use of Ramp’s products and services.',
+  '/legal/security':
+    'How Ramp keeps your finance data safe — security practices, certifications, and trust resources.',
+  '/legal/cookie-settings':
+    'Manage cookie preferences for ramp.example and learn how Ramp uses cookies.',
+  '/contact/sales':
+    'Talk to Ramp sales about corporate cards, bill pay, and the all‑in‑one finance platform for your team.',
+  '/contact/support':
+    'Get help from Ramp support — reach our team for product questions and account assistance.',
+  '/contact/press-inquiries':
+    'Media and press inquiries for Ramp — get in touch with our communications team.',
+  '/contact/email': 'Email Ramp at hello@ramp.example.',
+}
+
+function titleizeSlug(s) {
+  return s
+    .split('-')
+    .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
+    .join(' ')
+}
+
+function findFooterLabel(path) {
+  for (const col of FOOTER_COLS) {
+    for (const [label, p] of col.items) {
+      if (p === path) return { label, section: col.title }
+    }
+  }
+  return null
+}
+
+// Resolve title + description for a given pathname. Used by the route layout
+// to keep <title>, meta description, and Open Graph / Twitter tags in sync as
+// the user navigates between pages.
+export function getPageMeta(pathname) {
+  if (pathname === '/' || pathname === '') {
+    return { title: HOME_META.title, description: HOME_META.description }
+  }
+
+  const top = TOP_PAGES[pathname]
+  if (top) {
+    const description = TOP_PAGE_DESCRIPTIONS[pathname] || top.intro
+    const cleanTitle = top.title.replace(/\.$/, '')
+    return {
+      title: `${cleanTitle} | ${SITE_NAME}`,
+      description,
+    }
+  }
+
+  const footer = findFooterLabel(pathname)
+  if (footer) {
+    const description =
+      SUB_PAGE_DESCRIPTIONS[pathname] ||
+      `${footer.label} — part of Ramp’s ${footer.section.toLowerCase()} resources.`
+    return {
+      title: `${footer.label} | ${SITE_NAME}`,
+      description,
+    }
+  }
+
+  // Unknown path: derive something reasonable from the URL itself.
+  const parts = pathname.replace(/^\//, '').split('/').filter(Boolean)
+  const last = parts[parts.length - 1] || 'Page'
+  const section = parts.length > 1 ? titleizeSlug(parts[0]) : null
+  const label = titleizeSlug(last)
+  return {
+    title: `${label} | ${SITE_NAME}`,
+    description: section
+      ? `${label} — part of Ramp’s ${section.toLowerCase()} section.`
+      : DEFAULT_DESCRIPTION,
+  }
 }

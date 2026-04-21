@@ -19,6 +19,34 @@ import {
   Footer,
 } from './components/sections.jsx'
 import StubPage from './components/StubPage.jsx'
+import { getPageMeta } from './routes.js'
+
+function setMetaTag(selector, attr, value) {
+  let el = document.head.querySelector(selector)
+  if (!el) {
+    el = document.createElement('meta')
+    const [, key, name] = selector.match(/^meta\[(name|property)="([^"]+)"\]$/) || []
+    if (key && name) el.setAttribute(key, name)
+    document.head.appendChild(el)
+  }
+  el.setAttribute(attr, value)
+}
+
+function usePageMeta(pathname) {
+  useEffect(() => {
+    const { title, description } = getPageMeta(pathname)
+    document.title = title
+    const url = window.location.origin + pathname
+    setMetaTag('meta[name="description"]', 'content', description)
+    setMetaTag('meta[property="og:title"]', 'content', title)
+    setMetaTag('meta[property="og:description"]', 'content', description)
+    setMetaTag('meta[property="og:url"]', 'content', url)
+    setMetaTag('meta[property="og:type"]', 'content', 'website')
+    setMetaTag('meta[name="twitter:card"]', 'content', 'summary_large_image')
+    setMetaTag('meta[name="twitter:title"]', 'content', title)
+    setMetaTag('meta[name="twitter:description"]', 'content', description)
+  }, [pathname])
+}
 
 function useGlobalReveal(deps) {
   useEffect(() => {
@@ -71,6 +99,7 @@ function HomePage() {
 function Layout() {
   const { pathname } = useLocation()
   useGlobalReveal([pathname])
+  usePageMeta(pathname)
   return (
     <div className="page">
       <Nav />
