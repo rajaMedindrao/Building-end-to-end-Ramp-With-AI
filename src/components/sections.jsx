@@ -488,6 +488,7 @@ export function Footer() {
     { title: 'Company', items: ['About', 'Careers', 'Press', 'Partners', 'Newsroom'] },
     { title: 'Resources', items: ['Blog', 'Customer stories', 'Help center', 'Guides', 'API docs'] },
     { title: 'Legal', items: ['Privacy', 'Terms', 'Security', 'Cookie settings'] },
+    { title: 'Contact', items: ['Sales', 'Support', 'Press inquiries', 'hello@ramp.example'] },
   ]
   return (
     <footer className="footer">

@@ -363,7 +363,7 @@ h3 { font-size: clamp(22px, 2.2vw, 28px); line-height: 1.15; }
 .footer-form input:focus { border-color: var(--lime); }
 
 .footer-grid {
-  display: grid; grid-template-columns: 1.4fr repeat(4, 1fr);
+  display: grid; grid-template-columns: 1.4fr repeat(5, 1fr);
   gap: 32px; padding: 56px 0 32px;
 }
 .logo-light { color: #fff; padding: 0; font-size: 28px; }
