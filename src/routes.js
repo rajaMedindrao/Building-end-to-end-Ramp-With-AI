@@ -8,14 +8,22 @@ export const DEFAULT_DESCRIPTION =
 
 export const DEFAULT_OG_IMAGE = '/og-default.png'
 
-// Section -> branded social preview image. Anything not listed here falls
-// back to DEFAULT_OG_IMAGE.
+// Path -> branded social preview image. Exact match wins; otherwise the
+// parent section image is used (see getPageImage). Add per-sub-page entries
+// here to give individual pages their own preview without changing the
+// fallback behaviour for siblings. Anything not matched falls back to
+// DEFAULT_OG_IMAGE.
 const SECTION_IMAGES = {
   '/': '/og-default.png',
   '/product': '/og-product.png',
   '/pricing': '/og-pricing.png',
   '/company': '/og-company.png',
   '/resources': '/og-resources.png',
+  '/resources/blog': '/og-resources-blog.png',
+  '/resources/customer-stories': '/og-resources-customer-stories.png',
+  '/resources/help-center': '/og-resources-help-center.png',
+  '/resources/guides': '/og-resources-guides.png',
+  '/resources/api-docs': '/og-resources-api-docs.png',
 }
 
 export const HOME_META = {

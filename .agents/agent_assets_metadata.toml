@@ -30,3 +30,33 @@ id = "oCqAh2MbgNA0DHmyvmFtt"
 uri = "file://public/og-resources.png"
 type = "image"
 title = "ramp og resources"
+
+[[generated]]
+id = "zY-0C5fwZCDmQbdL6YwSS"
+uri = "file://public/og-resources-blog.png"
+type = "image"
+title = "ramp og blog"
+
+[[generated]]
+id = "1qDTR6xU2nyspIiTwHslU"
+uri = "file://public/og-resources-customer-stories.png"
+type = "image"
+title = "ramp og customer stories"
+
+[[generated]]
+id = "-Mpafpwe6UH40K3XO0L_J"
+uri = "file://public/og-resources-help-center.png"
+type = "image"
+title = "ramp og help"
+
+[[generated]]
+id = "RoNPx1rWAkkdVSdhrJDNR"
+uri = "file://public/og-resources-guides.png"
+type = "image"
+title = "ramp og guides"
+
+[[generated]]
+id = "NeX0d6FmzCfchYTzNRhed"
+uri = "file://public/og-resources-api-docs.png"
+type = "image"
+title = "ramp og api"
