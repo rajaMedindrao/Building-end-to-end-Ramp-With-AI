@@ -1092,3 +1092,73 @@ h3 { font-size: clamp(22px, 2.2vw, 28px); line-height: 1.15; }
   .approval-actions { grid-template-columns: 1fr; }
   .app-bar { flex-direction: column; gap: 0.5rem; align-items: flex-start; }
 }
+
+/* === Tabs in the app header bar === */
+.app-bar-left { display: flex; align-items: center; gap: 1.5rem; }
+.app-tabs { display: flex; gap: 0.25rem; }
+.app-tab {
+  background: transparent;
+  color: rgba(245,242,228,0.7);
+  border: 0;
+  padding: 0.5rem 0.9rem;
+  border-radius: 999px;
+  font: inherit;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+}
+.app-tab:hover { background: rgba(245,242,228,0.08); color: var(--cream); }
+.app-tab.is-active { background: var(--lime); color: var(--green-900); }
+
+/* === Card CRUD form === */
+.card-form {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 0.9rem;
+  margin-bottom: 1.25rem;
+  padding: 1rem;
+  background: rgba(17,52,46,0.04);
+  border-radius: 12px;
+}
+.card-form-wide { grid-column: 1 / -1; }
+.card-form-actions { grid-column: 1 / -1; display: flex; gap: 0.75rem; }
+
+/* === Inline row actions in tables === */
+.row-actions { display: flex; gap: 0.75rem; justify-content: flex-end; white-space: nowrap; }
+.btn-link {
+  background: none;
+  border: 0;
+  padding: 0;
+  font: inherit;
+  color: var(--green-900);
+  text-decoration: underline;
+  cursor: pointer;
+}
+.btn-link:hover { color: var(--lime-2); }
+.btn-link:disabled { opacity: 0.5; cursor: not-allowed; }
+.btn-link-danger { color: #8a1c1c; }
+.btn-link-danger:hover { color: #c93030; }
+
+/* === Pagination === */
+.pager { display: flex; align-items: center; gap: 0.9rem; font-size: 0.9rem; }
+
+/* === Dark ghost button (used inside cream cards) === */
+.btn-ghost-dark {
+  background: transparent;
+  color: var(--green-900);
+  border: 1px solid rgba(17,52,46,0.25);
+  padding: 0.55rem 1rem;
+  border-radius: 999px;
+  font: inherit;
+  font-weight: 500;
+  cursor: pointer;
+}
+.btn-ghost-dark:hover { background: rgba(17,52,46,0.06); }
+
+.empty { text-align: center; padding: 1.5rem; color: rgba(17,52,46,0.5); }
+.cap { text-transform: capitalize; }
+
+@media (max-width: 720px) {
+  .app-bar-left { flex-direction: column; align-items: flex-start; gap: 0.75rem; width: 100%; }
+  .app-tabs { flex-wrap: wrap; }
+}

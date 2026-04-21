@@ -35,9 +35,19 @@ export const api = {
   // Cards
   listCards: () => request('GET', '/api/cards'),
   cardSummary: (id) => request('GET', `/api/cards/${id}/spend-summary`),
+  createCard: (payload) => request('POST', '/api/cards', payload),
+  updateCard: (id, payload) => request('PUT', `/api/cards/${id}`, payload),
+  deleteCard: (id) => request('DELETE', `/api/cards/${id}`),
+
+  // Employees
+  listEmployees: () => request('GET', '/api/employees'),
+
+  // Admin / inspection
+  listTables: () => request('GET', '/api/admin/tables'),
 
   // Transactions
-  listTransactions: () => request('GET', '/api/transactions'),
+  listTransactions: ({ limit = 5, offset = 0 } = {}) =>
+    request('GET', `/api/transactions?limit=${limit}&offset=${offset}`),
   submitTransaction: (payload) => request('POST', '/api/transactions/submit', payload),
 
   // Approvals

@@ -23,6 +23,7 @@ export function initSchema() {
     CREATE TABLE IF NOT EXISTS cards (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       employee_id INTEGER NOT NULL REFERENCES employees(id),
+      approver_id INTEGER REFERENCES employees(id),
       card_name TEXT NOT NULL,
       card_type TEXT NOT NULL DEFAULT 'physical',
       spend_limit_cents INTEGER NOT NULL,
@@ -73,45 +74,45 @@ export function seedIfEmpty() {
     'INSERT INTO employees (name, email, department, role, manager_id) VALUES (?, ?, ?, ?, ?)',
   )
   const insertCard = db.prepare(
-    'INSERT INTO cards (employee_id, card_name, card_type, spend_limit_cents, status, blocked_categories) VALUES (?, ?, ?, ?, ?, ?)',
+    `INSERT INTO cards
+     (employee_id, approver_id, card_name, card_type, spend_limit_cents, status, blocked_categories)
+     VALUES (?, ?, ?, ?, ?, ?, ?)`,
   )
 
   db.transaction(() => {
-    // Spec seed
-    const sarah = insertEmp.run('Sarah Chen', 'sarah@company.com', 'Engineering', 'manager', null)
+    // Three users only. Raja is the top-level manager and approves
+    // every card in the seed (including his own — he's his own approver
+    // so his over-$500 charges still flow through the same queue).
+    const raja = insertEmp.run('Raja Surge', 'raja@surgeai.com', 'Operations', 'manager', null)
       .lastInsertRowid
-    const james = insertEmp.run('James Park', 'james@company.com', 'Engineering', 'employee', sarah)
+    const nick = insertEmp.run('Nick Patel', 'nick@surgeai.com', 'Product', 'employee', raja)
       .lastInsertRowid
-    const maria = insertEmp.run('Maria Lopez', 'maria@company.com', 'Sales', 'manager', null)
-      .lastInsertRowid
-    const tom = insertEmp.run('Tom Wright', 'tom@company.com', 'Sales', 'employee', maria)
+    const sully = insertEmp.run('Sully Reyes', 'sully@surgeai.com', 'Chief of Staff', 'employee', raja)
       .lastInsertRowid
 
-    insertCard.run(james, 'James Engineering Card', 'physical', 100000, 'active', '[]')
-    insertCard.run(tom, 'Tom Sales Card', 'physical', 500000, 'active', '["gambling"]')
-    insertCard.run(james, 'James Virtual Card', 'virtual', 20000, 'active', '[]')
-
-    // Logged-in user: raja is a manager in Operations with one direct report.
-    // Gives the post-login dashboard meaningful data on first run.
-    const raja = insertEmp.run(
-      'Raja Surge',
-      'raja@surgeai.com',
-      'Operations',
-      'manager',
-      null,
-    ).lastInsertRowid
-    const priya = insertEmp.run(
-      'Priya Nair',
-      'priya@surgeai.com',
-      'Operations',
-      'employee',
-      raja,
-    ).lastInsertRowid
-    insertCard.run(raja, 'Raja Ops Card', 'physical', 750000, 'active', '[]')
-    insertCard.run(priya, 'Priya Ops Card', 'physical', 200000, 'active', '["gambling"]')
-    insertCard.run(priya, 'Priya Virtual Card', 'virtual', 20000, 'active', '[]')
+    insertCard.run(raja, raja, 'Raja Ops Card', 'physical', 1000000, 'active', '[]')
+    insertCard.run(nick, raja, 'Nick Prod Card', 'physical', 500000, 'active', '[]')
+    insertCard.run(sully, raja, 'Sully CoS Card', 'physical', 500000, 'active', '[]')
   })()
 }
 
 initSchema()
 seedIfEmpty()
+
+// One-line schema summary at boot so the user can see in the workflow
+// log that the SQLite tables actually exist (they don't show up in
+// Replit's database pane because that's Postgres-only).
+export function logSchemaSummary() {
+  const tables = db
+    .prepare("SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%'")
+    .all()
+    .map((t) => t.name)
+  const counts = tables.map((name) => {
+    const c = db.prepare(`SELECT COUNT(*) AS n FROM "${name}"`).get().n
+    return `${name}=${c}`
+  })
+  console.log(`[db] ${DB_PATH}`)
+  console.log(`[db] tables: ${counts.join(', ')}`)
+}
+
+logSchemaSummary()

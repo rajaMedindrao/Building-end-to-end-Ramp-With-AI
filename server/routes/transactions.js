@@ -55,7 +55,10 @@ router.post('/submit', requireAuth, (req, res) => {
   })
 })
 
-router.get('/', requireAuth, (_req, res) => {
+router.get('/', requireAuth, (req, res) => {
+  const limit = Math.min(50, Math.max(1, Number(req.query.limit) || 5))
+  const offset = Math.max(0, Number(req.query.offset) || 0)
+  const total = db.prepare('SELECT COUNT(*) AS c FROM transactions').get().c
   const rows = db
     .prepare(
       `SELECT t.*, c.card_name, e.name AS employee_name
@@ -63,10 +66,13 @@ router.get('/', requireAuth, (_req, res) => {
        JOIN cards c ON c.id = t.card_id
        JOIN employees e ON e.id = t.employee_id
        ORDER BY t.id DESC
-       LIMIT 50`,
+       LIMIT ? OFFSET ?`,
     )
-    .all()
+    .all(limit, offset)
   res.json({
+    total,
+    limit,
+    offset,
     transactions: rows.map((r) => ({
       id: r.id,
       created_at: r.created_at,

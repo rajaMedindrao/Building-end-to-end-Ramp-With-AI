@@ -7,23 +7,42 @@ import CardsOverview from '../dashboard/CardsOverview.jsx'
 import RecentTransactions from '../dashboard/RecentTransactions.jsx'
 import ApprovalQueue from '../dashboard/ApprovalQueue.jsx'
 import ApprovalHistory from '../dashboard/ApprovalHistory.jsx'
+import CardsManager from '../dashboard/CardsManager.jsx'
+import DbInspector from '../dashboard/DbInspector.jsx'
+
+const TABS = [
+  { id: 'cards', label: 'Cards' },
+  { id: 'transactions', label: 'Transactions' },
+  { id: 'approvals', label: 'Approvals' },
+  { id: 'database', label: 'Database' },
+]
 
 export default function AppDashboard() {
   const { user, logout } = useAuth()
+  const [tab, setTab] = useState('cards')
   const [cards, setCards] = useState([])
-  const [transactions, setTransactions] = useState([])
+  const [employees, setEmployees] = useState([])
   const [managers, setManagers] = useState([])
   const [managerId, setManagerId] = useState(null)
   const [pending, setPending] = useState([])
   const [history, setHistory] = useState([])
   const [toast, setToast] = useState(null)
   const [error, setError] = useState(null)
+  const [txnRefresh, setTxnRefresh] = useState(0)
 
-  const refreshCardsAndTxns = useCallback(async () => {
+  const refreshCards = useCallback(async () => {
     try {
-      const [c, t] = await Promise.all([api.listCards(), api.listTransactions()])
+      const c = await api.listCards()
       setCards(c.cards)
-      setTransactions(t.transactions)
+    } catch (e) {
+      setError(e.message)
+    }
+  }, [])
+
+  const refreshEmployees = useCallback(async () => {
+    try {
+      const r = await api.listEmployees()
+      setEmployees(r.employees)
     } catch (e) {
       setError(e.message)
     }
@@ -45,17 +64,17 @@ export default function AppDashboard() {
   )
 
   useEffect(() => {
-    refreshCardsAndTxns()
+    refreshCards()
+    refreshEmployees()
     api
       .listManagers()
       .then((r) => {
         setManagers(r.managers)
-        // Default to the logged-in user if they're a manager, else first.
         const initial = r.managers.find((m) => m.id === user?.id)?.id || r.managers[0]?.id
         if (initial) setManagerId(initial)
       })
       .catch((e) => setError(e.message))
-  }, [refreshCardsAndTxns, user?.id])
+  }, [refreshCards, refreshEmployees, user?.id])
 
   useEffect(() => {
     if (managerId) refreshApprovals(managerId)
@@ -67,13 +86,15 @@ export default function AppDashboard() {
   }
 
   async function afterTxn() {
-    await refreshCardsAndTxns()
+    await refreshCards()
     await refreshApprovals()
+    setTxnRefresh((n) => n + 1)
   }
 
   async function afterDecision() {
     await refreshApprovals()
-    await refreshCardsAndTxns()
+    await refreshCards()
+    setTxnRefresh((n) => n + 1)
   }
 
   const activeManager = managers.find((m) => m.id === managerId)
@@ -81,9 +102,23 @@ export default function AppDashboard() {
   return (
     <main className="app-shell">
       <header className="app-bar">
-        <Link to="/" className="app-brand">
-          ramp by Surge AI
-        </Link>
+        <div className="app-bar-left">
+          <Link to="/" className="app-brand">
+            ramp by Surge AI
+          </Link>
+          <nav className="app-tabs" aria-label="Sections">
+            {TABS.map((t) => (
+              <button
+                key={t.id}
+                type="button"
+                className={`app-tab ${tab === t.id ? 'is-active' : ''}`}
+                onClick={() => setTab(t.id)}
+              >
+                {t.label}
+              </button>
+            ))}
+          </nav>
+        </div>
         <div className="app-bar-right">
           <span className="muted">
             {user?.name} · {user?.role} · {user?.department}
@@ -102,37 +137,50 @@ export default function AppDashboard() {
       )}
 
       <div className="app-grid">
-        <TransactionForm cards={cards} onSubmitted={afterTxn} />
-        <CardsOverview cards={cards} />
-        <RecentTransactions transactions={transactions} />
+        {tab === 'cards' && (
+          <CardsManager cards={cards} employees={employees} onChange={refreshCards} />
+        )}
 
-        <section className="dash-card">
-          <header className="dash-card-head dash-card-head-row">
-            <div>
-              <h2>View as manager</h2>
-              <p>Switch perspective to review another manager's queue.</p>
-            </div>
-            <select
-              value={managerId || ''}
-              onChange={(e) => setManagerId(Number(e.target.value))}
-            >
-              {managers.map((m) => (
-                <option key={m.id} value={m.id}>
-                  {m.name} — {m.department}
-                </option>
-              ))}
-            </select>
-          </header>
-        </section>
+        {tab === 'transactions' && (
+          <>
+            <TransactionForm cards={cards} onSubmitted={afterTxn} />
+            <CardsOverview cards={cards} />
+            <RecentTransactions refreshKey={txnRefresh} />
+          </>
+        )}
 
-        <ApprovalQueue
-          managerId={managerId}
-          managerName={activeManager?.name}
-          approvals={pending}
-          onChange={afterDecision}
-          onToast={showToast}
-        />
-        <ApprovalHistory history={history} />
+        {tab === 'approvals' && (
+          <>
+            <section className="dash-card">
+              <header className="dash-card-head dash-card-head-row">
+                <div>
+                  <h2>View as manager</h2>
+                  <p>Switch perspective to review another manager's queue.</p>
+                </div>
+                <select
+                  value={managerId || ''}
+                  onChange={(e) => setManagerId(Number(e.target.value))}
+                >
+                  {managers.map((m) => (
+                    <option key={m.id} value={m.id}>
+                      {m.name} — {m.department}
+                    </option>
+                  ))}
+                </select>
+              </header>
+            </section>
+            <ApprovalQueue
+              managerId={managerId}
+              managerName={activeManager?.name}
+              approvals={pending}
+              onChange={afterDecision}
+              onToast={showToast}
+            />
+            <ApprovalHistory history={history} />
+          </>
+        )}
+
+        {tab === 'database' && <DbInspector />}
       </div>
 
       {toast && <div className={`app-toast app-toast-${toast.kind}`}>{toast.text}</div>}

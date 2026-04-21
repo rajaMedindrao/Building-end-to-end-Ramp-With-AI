@@ -7,6 +7,8 @@ import authRoutes from './routes/auth.js'
 import cardsRoutes from './routes/cards.js'
 import txnRoutes from './routes/transactions.js'
 import approvalsRoutes from './routes/approvals.js'
+import employeesRoutes from './routes/employees.js'
+import adminRoutes from './routes/admin.js'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 const app = express()
@@ -21,6 +23,8 @@ app.use('/api/auth', authRoutes)
 app.use('/api/cards', cardsRoutes)
 app.use('/api/transactions', txnRoutes)
 app.use('/api/approvals', approvalsRoutes)
+app.use('/api/employees', employeesRoutes)
+app.use('/api/admin', adminRoutes)
 
 if (isProd) {
   const distDir = resolve(__dirname, '..', 'dist')

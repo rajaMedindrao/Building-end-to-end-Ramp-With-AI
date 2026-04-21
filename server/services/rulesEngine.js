@@ -50,19 +50,33 @@ export function evaluateTransaction({ card, amountCents, merchantCategory }) {
     return { outcome: 'declined', reason: 'Virtual cards limited to $200 per transaction' }
   }
 
-  // Rule 5: Over $500 needs manager approval
+  // Rule 5: Over $500 needs manager approval. The card's explicit
+  // approver_id wins; otherwise we fall back to the cardholder's manager.
   if (amountCents > APPROVAL_THRESHOLD_CENTS) {
-    const manager = db
-      .prepare(
-        `SELECT m.* FROM employees e
-         JOIN employees m ON m.id = e.manager_id
-         WHERE e.id = ?`,
-      )
-      .get(card.employee_id)
+    const approverId =
+      card.approver_id ||
+      db.prepare('SELECT manager_id FROM employees WHERE id = ?').get(card.employee_id)
+        ?.manager_id
+    if (!approverId) {
+      return {
+        outcome: 'declined',
+        reason: 'Amount over $500 requires manager approval but no approver is assigned',
+      }
+    }
+    const manager = db.prepare('SELECT * FROM employees WHERE id = ?').get(approverId)
     if (!manager) {
       return {
         outcome: 'declined',
-        reason: 'Amount over $500 requires manager approval but no manager is assigned',
+        reason: 'Configured approver no longer exists',
+      }
+    }
+    // Defensive guard: if the configured approver is not a manager, the
+    // /decide endpoint would 403 them and the transaction would be stuck
+    // in pending forever. Decline up-front instead.
+    if (manager.role !== 'manager') {
+      return {
+        outcome: 'declined',
+        reason: 'Configured approver is not a manager',
       }
     }
     return { outcome: 'pending_approval', manager }
