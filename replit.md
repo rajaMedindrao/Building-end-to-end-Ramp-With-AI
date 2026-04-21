@@ -32,3 +32,17 @@ npm run dev
 ## Development Notes
 - The Vite dev server is configured with `allowedHosts: true` and `host: 0.0.0.0` for Replit's proxy environment.
 - Frontend port: 5000 (webview)
+
+## Production domain (`SITE_URL`)
+A single env var, `SITE_URL`, controls the absolute domain used for SEO and
+social-share URLs. Two places consume it:
+- `vite.config.js` — the `absoluteSocialImages` plugin rewrites the
+  `og:image` / `twitter:image` paths in `index.html` to absolute URLs at
+  build time.
+- `scripts/generate-sitemap.mjs` — writes `public/sitemap.xml` and
+  `public/robots.txt` using the same domain.
+
+When deploying, set `SITE_URL` to the real production origin (e.g.
+`https://your-domain.com`, no trailing slash). If unset it defaults to the
+placeholder `https://ramp.example`, which is fine for local dev but should
+be overridden before going live.
