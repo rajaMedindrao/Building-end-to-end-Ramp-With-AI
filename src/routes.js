@@ -386,13 +386,21 @@ function findFooterLabel(path) {
   return null
 }
 
-// Resolve the social preview image for a given pathname. Top-level pages
-// get their own branded image; footer sub-pages inherit their parent
-// section's image (e.g. /product/bill-pay -> /og-product.png).
+// Resolve the social preview image for a given pathname using
+// longest-prefix matching. An exact match wins; otherwise we walk up
+// the path one segment at a time. This means:
+//   /resources/blog/some-article -> /resources/blog -> /resources -> /
+// so deeper, future per-article routes inherit their sub-section image
+// without any extra wiring.
 function getPageImage(pathname) {
-  if (SECTION_IMAGES[pathname]) return SECTION_IMAGES[pathname]
-  const root = '/' + (pathname.split('/').filter(Boolean)[0] || '')
-  return SECTION_IMAGES[root] || DEFAULT_OG_IMAGE
+  const clean = (pathname || '/').replace(/\/+$/, '') || '/'
+  if (SECTION_IMAGES[clean]) return SECTION_IMAGES[clean]
+  const segments = clean.split('/').filter(Boolean)
+  for (let i = segments.length - 1; i > 0; i--) {
+    const prefix = '/' + segments.slice(0, i).join('/')
+    if (SECTION_IMAGES[prefix]) return SECTION_IMAGES[prefix]
+  }
+  return DEFAULT_OG_IMAGE
 }
 
 export function getPageMeta(pathname) {
