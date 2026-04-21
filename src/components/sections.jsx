@@ -1,10 +1,13 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { Link, NavLink } from 'react-router-dom'
 import { useParallax } from '../hooks/useMotion.js'
 import { NAV_LINKS, FOOTER_COLS } from '../routes.js'
 
 export function Nav() {
   const [open, setOpen] = useState(false)
+  const burgerRef = useRef(null)
+  const mobileRef = useRef(null)
+  const wasOpenRef = useRef(false)
 
   useEffect(() => {
     if (typeof window === 'undefined') return
@@ -20,9 +23,56 @@ export function Nav() {
     }
   }, [])
 
+  const getFocusable = () => {
+    const root = mobileRef.current
+    if (!root) return []
+    return Array.from(
+      root.querySelectorAll(
+        'a[href], button:not([disabled]), [tabindex]:not([tabindex="-1"])'
+      )
+    ).filter((el) => !el.hasAttribute('disabled') && el.tabIndex !== -1)
+  }
+
   useEffect(() => {
-    if (!open) return
-    const onKey = (e) => { if (e.key === 'Escape') setOpen(false) }
+    if (!open) {
+      if (wasOpenRef.current) {
+        wasOpenRef.current = false
+        burgerRef.current && burgerRef.current.focus()
+      }
+      return
+    }
+    wasOpenRef.current = true
+
+    const focusables = getFocusable()
+    if (focusables[0]) focusables[0].focus()
+
+    const onKey = (e) => {
+      if (e.key === 'Escape') {
+        e.preventDefault()
+        setOpen(false)
+        return
+      }
+      if (e.key !== 'Tab') return
+      const items = getFocusable()
+      if (items.length === 0) {
+        e.preventDefault()
+        return
+      }
+      const first = items[0]
+      const last = items[items.length - 1]
+      const active = document.activeElement
+      if (e.shiftKey) {
+        if (active === first || !mobileRef.current.contains(active)) {
+          e.preventDefault()
+          last.focus()
+        }
+      } else {
+        if (active === last || !mobileRef.current.contains(active)) {
+          e.preventDefault()
+          first.focus()
+        }
+      }
+    }
     document.addEventListener('keydown', onKey)
     const prev = document.body.style.overflow
     document.body.style.overflow = 'hidden'
@@ -46,6 +96,7 @@ export function Nav() {
           <Link to="/get-started" className="btn btn-lime">Get started</Link>
         </div>
         <button
+          ref={burgerRef}
           className={`nav-burger ${open ? 'is-open' : ''}`}
           aria-label={open ? 'Close menu' : 'Open menu'}
           aria-expanded={open}
@@ -56,6 +107,7 @@ export function Nav() {
       </div>
 
       <div
+        ref={mobileRef}
         className={`nav-mobile ${open ? 'is-open' : ''}`}
         role="dialog"
         aria-modal="true"
