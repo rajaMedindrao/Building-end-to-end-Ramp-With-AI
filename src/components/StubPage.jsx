@@ -242,7 +242,7 @@ function TopPage({ page }) {
           <h1>{page.title}</h1>
           <p className="page-intro">{page.intro}</p>
           <div className="page-cta">
-            <Link to="/get-started" className="btn btn-lime">Get started for free</Link>
+            <Link to="/signin" className="btn btn-lime">Get started for free</Link>
             <Link to="/" className="link-light arrow">Back to home →</Link>
           </div>
         </div>
@@ -288,7 +288,7 @@ function TopPage({ page }) {
                         <li key={f}><span className="plan-check">✓</span>{f}</li>
                       ))}
                     </ul>
-                    <Link to="/get-started" className={`btn ${p.highlight ? 'btn-lime' : 'btn-dark'}`}>
+                    <Link to="/signin" className={`btn ${p.highlight ? 'btn-lime' : 'btn-dark'}`}>
                       {isContact ? 'Contact sales' : 'Get started'}
                     </Link>
                   </article>
@@ -340,7 +340,12 @@ function TopPage({ page }) {
             >
               <label>
                 Work email
-                <input type="email" required placeholder="you@company.com" />
+                <input
+                  type="email"
+                  required
+                  placeholder="raja@surgeai.com"
+                  defaultValue="raja@surgeai.com"
+                />
               </label>
               {page.form === 'sign-in' && (
                 <label>

@@ -4,9 +4,48 @@
 A React + Vite web application imported from GitHub (`rajaMedindrao/Building-end-to-end-Ramp-With-AI`). The repository was empty on import, so a base project structure was created.
 
 ## Tech Stack
-- **Frontend**: React 18 + Vite 6
+- **Frontend**: React 18 + Vite 6 (marketing site + signed-in app dashboard)
+- **Backend**: Node 20 + Express 5 + better-sqlite3 (single deployable artifact for GCP)
+- **Database**: SQLite at `data/app.db` (override with `DB_PATH`)
 - **Package Manager**: npm
 - **Runtime**: Node.js 20
+
+## App areas
+- `/` and other marketing routes — original Ramp clone, no auth required.
+- `/signin` — single hardcoded login: `raja@surgeai.com` / `surgeai`.
+- `/app` — protected dashboard with the Card Spend Limit rules engine and
+  the manager Approval queue (spec in
+  `attached_assets/Pasted-The-two-features-I-d-pick-...txt`).
+
+## Backend layout
+```
+server/
+  index.js           # Express app, mounts /api/*; in prod also serves dist/
+  db.js              # SQLite connection, schema, seed (idempotent)
+  auth.js            # HMAC-signed session cookie + requireAuth middleware
+  routes/
+    auth.js          # /api/auth/login, /logout, /me
+    cards.js         # /api/cards, /api/cards/:id/spend-summary
+    transactions.js  # /api/transactions, /api/transactions/submit
+    approvals.js     # /api/approvals/{pending,history,managers,:id/decide}
+  services/
+    rulesEngine.js   # evaluate_transaction (5 rules in strict order) + submit
+    spendTracker.js  # monthly_spend read/update
+    approvalService.js # process_decision (approve/reject)
+```
+
+## Dev / prod wiring
+- Dev: `npm run dev` runs Vite (:5000) and Express (:3001) concurrently;
+  Vite proxies `/api` to Express. Single workflow.
+- Prod: `npm run build` then `npm start` runs Express on `$PORT` (default
+  3001), serves the built `dist/` and `/api/*` from one process. Suitable
+  for one Cloud Run service.
+
+## Required production env vars
+- `SESSION_SECRET` — strong random string. The server fails to start if
+  this is unset when `NODE_ENV=production`.
+- `SITE_URL` — see section below.
+- `DB_PATH` (optional) — point at a persistent volume on Cloud Run.
 
 ## Project Structure
 ```

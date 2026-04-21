@@ -4,14 +4,20 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "dev": "vite --host 0.0.0.0 --port 5000",
+    "dev": "concurrently -k -n web,api -c blue,magenta \"npm:dev:web\" \"npm:dev:api\"",
+    "dev:web": "vite --host 0.0.0.0 --port 5000",
+    "dev:api": "nodemon --watch server --ext js server/index.js",
     "predev": "node scripts/generate-sitemap.mjs",
     "prebuild": "node scripts/generate-sitemap.mjs",
     "build": "vite build",
+    "start": "NODE_ENV=production node server/index.js",
     "preview": "vite preview",
     "generate:sitemap": "node scripts/generate-sitemap.mjs"
   },
   "dependencies": {
+    "better-sqlite3": "^12.9.0",
+    "cookie-parser": "^1.4.7",
+    "express": "^5.2.1",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "react-router-dom": "^7.14.2"
@@ -20,6 +26,8 @@
     "@types/react": "^18.3.1",
     "@types/react-dom": "^18.3.1",
     "@vitejs/plugin-react": "^4.7.0",
+    "concurrently": "^9.2.1",
+    "nodemon": "^3.1.14",
     "vite": "^6.4.2"
   }
 }

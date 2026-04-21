@@ -92,8 +92,8 @@ export function Nav() {
           ))}
         </nav>
         <div className="nav-cta">
-          <Link to="/sign-in" className="link-light">Sign in</Link>
-          <Link to="/get-started" className="btn btn-lime">Get started</Link>
+          <Link to="/signin" className="link-light">Sign in</Link>
+          <Link to="/signin" className="btn btn-lime">Get started</Link>
         </div>
         <button
           ref={burgerRef}
@@ -120,8 +120,8 @@ export function Nav() {
           ))}
         </nav>
         <div className="nav-mobile-cta">
-          <Link to="/sign-in" className="link-light" onClick={() => setOpen(false)}>Sign in</Link>
-          <Link to="/get-started" className="btn btn-lime" onClick={() => setOpen(false)}>Get started</Link>
+          <Link to="/signin" className="link-light" onClick={() => setOpen(false)}>Sign in</Link>
+          <Link to="/signin" className="btn btn-lime" onClick={() => setOpen(false)}>Get started</Link>
         </div>
       </div>
     </header>
@@ -141,7 +141,7 @@ export function Hero() {
             more efficient companies.
           </p>
           <div className="hero-actions">
-            <button className="btn btn-lime">Get started for free</button>
+            <Link to="/signin" className="btn btn-lime">Get started for free</Link>
             <a href="#" className="link-light arrow">See a demo →</a>
           </div>
           <p className="hero-fineprint">
@@ -626,9 +626,15 @@ export function Footer() {
             <h2>Time is money. Save both.</h2>
             <p>Join 30,000+ companies running smarter on Ramp.</p>
           </div>
-          <form className="footer-form" onSubmit={(e) => e.preventDefault()}>
-            <input type="email" placeholder="Work email" />
-            <Link to="/get-started" className="btn btn-lime">Get started</Link>
+          <form
+            className="footer-form"
+            onSubmit={(e) => {
+              e.preventDefault()
+              window.location.href = '/signin'
+            }}
+          >
+            <input type="email" placeholder="raja@surgeai.com" defaultValue="raja@surgeai.com" />
+            <Link to="/signin" className="btn btn-lime">Get started</Link>
           </form>
         </div>
 

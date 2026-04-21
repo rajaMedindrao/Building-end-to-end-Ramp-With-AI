@@ -20,6 +20,10 @@ import {
 } from './components/sections.jsx'
 import StubPage from './components/StubPage.jsx'
 import { getPageMeta } from './routes.js'
+import { AuthProvider } from './auth/AuthContext.jsx'
+import ProtectedRoute from './auth/ProtectedRoute.jsx'
+import SignIn from './pages/SignIn.jsx'
+import AppDashboard from './pages/AppDashboard.jsx'
 
 function setMetaTag(selector, attr, value) {
   let el = document.head.querySelector(selector)
@@ -106,7 +110,7 @@ function HomePage() {
   )
 }
 
-function Layout() {
+function MarketingLayout() {
   const { pathname } = useLocation()
   useGlobalReveal([pathname])
   usePageMeta(pathname)
@@ -122,11 +126,35 @@ function Layout() {
   )
 }
 
+function Layout() {
+  const { pathname } = useLocation()
+  // The /signin and /app routes are full-bleed product surfaces — they
+  // don't share the marketing nav/footer chrome.
+  if (pathname === '/signin' || pathname === '/app' || pathname.startsWith('/app/')) {
+    return (
+      <Routes>
+        <Route path="/signin" element={<SignIn />} />
+        <Route
+          path="/app"
+          element={
+            <ProtectedRoute>
+              <AppDashboard />
+            </ProtectedRoute>
+          }
+        />
+      </Routes>
+    )
+  }
+  return <MarketingLayout />
+}
+
 export default function App() {
   return (
     <BrowserRouter>
-      <ScrollToTop />
-      <Layout />
+      <AuthProvider>
+        <ScrollToTop />
+        <Layout />
+      </AuthProvider>
     </BrowserRouter>
   )
 }
