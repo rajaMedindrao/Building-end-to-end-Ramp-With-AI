@@ -1,0 +1,507 @@
+The two features I'd pick: **Card Spend Limit Enforcement** and **Transaction Approval Workflow**. Here's why — they directly interact with each other, they expose the most interesting agent failures, and they're the literal core of what Ramp does.
+
+Here's the full spec document, ready to paste into Replit Agent:
+
+---
+
+# Ramp Core — Feature Specification Document
+
+## Project Context
+
+This is a simplified Ramp-like expense management system. The backend is Python FastAPI. The frontend is React. The database is SQLite. Everything runs inside Replit. Do not add authentication, file uploads, or external APIs. Keep all logic self-contained.
+
+The existing frontend dashboard is already built. You are adding two backend features with frontend UI components that plug into the existing dashboard. Do not rebuild the dashboard — extend it.
+
+---
+
+## Database Schema
+
+Create these tables in SQLite if they do not already exist. Use this exact schema — do not modify column names.
+
+```sql
+CREATE TABLE IF NOT EXISTS employees (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    name TEXT NOT NULL,
+    email TEXT NOT NULL UNIQUE,
+    department TEXT NOT NULL,
+    role TEXT NOT NULL DEFAULT 'employee',
+    -- role is either 'employee' or 'manager'
+    manager_id INTEGER REFERENCES employees(id)
+);
+
+CREATE TABLE IF NOT EXISTS cards (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    employee_id INTEGER NOT NULL REFERENCES employees(id),
+    card_name TEXT NOT NULL,
+    card_type TEXT NOT NULL DEFAULT 'physical',
+    -- card_type is either 'physical' or 'virtual'
+    spend_limit_cents INTEGER NOT NULL,
+    -- ALL monetary values stored as integers in cents
+    -- Example: $1,000.00 is stored as 100000
+    status TEXT NOT NULL DEFAULT 'active',
+    -- status is either 'active' or 'frozen'
+    blocked_categories TEXT DEFAULT '[]',
+    -- JSON array of blocked merchant categories
+    -- Example: '["gambling", "entertainment"]'
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS transactions (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    card_id INTEGER NOT NULL REFERENCES cards(id),
+    employee_id INTEGER NOT NULL REFERENCES employees(id),
+    merchant_name TEXT NOT NULL,
+    merchant_category TEXT NOT NULL,
+    amount_cents INTEGER NOT NULL,
+    -- ALL monetary values stored as integers in cents
+    status TEXT NOT NULL DEFAULT 'pending',
+    -- status is one of:
+    -- 'approved' - passed all checks, charge completed
+    -- 'declined' - failed a spend limit or policy check
+    -- 'pending_approval' - amount over $500, waiting for manager
+    decline_reason TEXT,
+    -- populated only when status is 'declined'
+    -- Example: 'Exceeds monthly spend limit'
+    approval_id INTEGER REFERENCES approvals(id),
+    -- populated only when status is 'pending_approval'
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS approvals (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    transaction_id INTEGER REFERENCES transactions(id),
+    manager_id INTEGER NOT NULL REFERENCES employees(id),
+    status TEXT NOT NULL DEFAULT 'pending',
+    -- status is one of:
+    -- 'pending' - waiting for manager action
+    -- 'approved' - manager approved
+    -- 'rejected' - manager rejected
+    requested_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    decided_at TIMESTAMP,
+    manager_note TEXT
+    -- optional note from manager on approval or rejection
+);
+
+CREATE TABLE IF NOT EXISTS monthly_spend (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    card_id INTEGER NOT NULL REFERENCES cards(id),
+    month INTEGER NOT NULL,
+    -- stored as YYYYMM integer, Example: January 2025 = 202501
+    year INTEGER NOT NULL,
+    total_spent_cents INTEGER NOT NULL DEFAULT 0,
+    -- running total of all APPROVED transactions this month
+    -- in cents. Updated every time a transaction is approved.
+    UNIQUE(card_id, month, year)
+);
+```
+
+Seed the database with this test data on startup if the employees table is empty:
+
+```sql
+INSERT INTO employees (name, email, department, role, manager_id)
+VALUES
+    ('Sarah Chen', 'sarah@company.com', 'Engineering', 'manager', NULL),
+    ('James Park', 'james@company.com', 'Engineering', 'employee', 1),
+    ('Maria Lopez', 'maria@company.com', 'Sales', 'manager', NULL),
+    ('Tom Wright', 'tom@company.com', 'Sales', 'employee', 3);
+
+INSERT INTO cards (employee_id, card_name, card_type, spend_limit_cents, status, blocked_categories)
+VALUES
+    (2, 'James Engineering Card', 'physical', 100000, 'active', '[]'),
+    -- $1,000.00 monthly limit
+    (4, 'Tom Sales Card', 'physical', 500000, 'active', '["gambling"]'),
+    -- $5,000.00 monthly limit, gambling blocked
+    (2, 'James Virtual Card', 'virtual', 20000, 'active', '[]');
+    -- $200.00 monthly limit
+```
+
+---
+
+## Feature 1: Card Spend Limit Enforcement
+
+### What this feature does
+
+Every time a transaction is submitted, the system runs it through a rules engine before approving it. The rules engine checks five conditions in strict order. If any condition fails, the transaction is immediately declined with a specific reason. If all conditions pass, the transaction is approved and the monthly spend total is updated.
+
+This is the core of how Ramp protects companies from overspending.
+
+### The rules engine — strict order of evaluation
+
+Implement these checks in this exact order inside a function called `evaluate_transaction`. Do not change the order. Each rule must be checked independently — do not combine them.
+
+```
+Rule 1: Card must be active
+    IF card.status == 'frozen'
+    THEN decline with reason: "Card is frozen"
+    STOP. Do not check remaining rules.
+
+Rule 2: Merchant category must not be blocked
+    IF merchant_category is in card.blocked_categories
+    THEN decline with reason: "Merchant category is blocked"
+    STOP. Do not check remaining rules.
+
+Rule 3: Transaction must not exceed remaining monthly limit
+    remaining_limit = card.spend_limit_cents - monthly_spend_this_month
+    IF amount_cents > remaining_limit
+    THEN decline with reason: "Exceeds monthly spend limit. 
+         Remaining: ${remaining / 100:.2f}"
+    STOP. Do not check remaining rules.
+
+    IMPORTANT: remaining_limit uses monthly_spend_this_month,
+    NOT card.spend_limit_cents directly.
+    monthly_spend_this_month comes from the monthly_spend table
+    for the current month and year.
+    If no row exists for this card this month, treat spent as 0.
+
+Rule 4: Virtual cards have a hard cap of $200.00 per transaction
+    IF card.card_type == 'virtual' AND amount_cents > 20000
+    THEN decline with reason: "Virtual cards limited to $200 per transaction"
+    STOP. Do not check remaining rules.
+
+Rule 5: Transactions over $500.00 require manager approval
+    IF amount_cents > 50000
+    THEN do NOT decline.
+    Instead:
+        - Create a transaction record with status 'pending_approval'
+        - Create an approval record with status 'pending'
+            linked to the manager of the card's employee
+        - Return status 'pending_approval' to the frontend
+    STOP. Do not mark as approved yet.
+
+If all rules pass:
+    - Create transaction record with status 'approved'
+    - UPDATE monthly_spend for this card, this month, this year
+        by adding amount_cents to total_spent_cents
+        Use INSERT OR REPLACE to handle first transaction of month
+    - Return status 'approved' to the frontend
+```
+
+### Backend endpoints for Feature 1
+
+**POST /api/transactions/submit**
+
+Request body:
+```json
+{
+    "card_id": 1,
+    "merchant_name": "AWS",
+    "merchant_category": "software",
+    "amount_cents": 75000
+}
+```
+
+Response on approval:
+```json
+{
+    "status": "approved",
+    "transaction_id": 12,
+    "message": "Transaction approved",
+    "remaining_limit_cents": 25000
+}
+```
+
+Response on decline:
+```json
+{
+    "status": "declined",
+    "transaction_id": 12,
+    "message": "Exceeds monthly spend limit. Remaining: $250.00",
+    "decline_reason": "Exceeds monthly spend limit. Remaining: $250.00"
+}
+```
+
+Response on pending approval:
+```json
+{
+    "status": "pending_approval",
+    "transaction_id": 12,
+    "approval_id": 3,
+    "message": "Amount over $500. Sent to manager for approval.",
+    "manager_name": "Sarah Chen"
+}
+```
+
+**GET /api/cards/{card_id}/spend-summary**
+
+Returns the current spend status for a card.
+
+Response:
+```json
+{
+    "card_id": 1,
+    "card_name": "James Engineering Card",
+    "spend_limit_cents": 100000,
+    "spent_this_month_cents": 45000,
+    "remaining_cents": 55000,
+    "spend_limit_display": "$1,000.00",
+    "spent_display": "$450.00",
+    "remaining_display": "$550.00",
+    "utilization_percent": 45
+}
+```
+
+**GET /api/cards**
+
+Returns all cards with their current spend summary included.
+
+**GET /api/transactions**
+
+Returns all transactions, most recent first, with card name and employee name joined.
+
+### Frontend UI for Feature 1
+
+Add a section to the existing dashboard called **"Submit Transaction"**. This is a simple form — do not build a separate page.
+
+The form has these fields:
+- Dropdown: Select Card (populated from GET /api/cards, shows card name + employee name + remaining limit)
+- Text input: Merchant Name
+- Dropdown: Merchant Category (options: software, travel, meals, entertainment, office supplies, gambling, hardware, marketing)
+- Number input: Amount in dollars (the frontend converts to cents before sending — multiply by 100)
+
+Submit button labeled "Process Transaction."
+
+On submit, show a result banner directly below the form:
+- Green banner for approved: "✓ Approved — $X.XX charged. $X.XX remaining this month."
+- Red banner for declined: "✗ Declined — [decline reason]"
+- Yellow banner for pending: "⏳ Pending Manager Approval — Request sent to [manager name]"
+
+Below the form, show a **Cards Overview** table with columns:
+- Card Name
+- Employee
+- Type (Physical / Virtual)
+- Monthly Limit
+- Spent This Month
+- Remaining
+- Utilization (shown as a colored progress bar — green under 70%, yellow 70–90%, red over 90%)
+- Status (Active / Frozen)
+
+This table fetches from GET /api/cards on page load and refreshes after every transaction submission.
+
+Below the cards table, show a **Recent Transactions** table with columns:
+- Date
+- Card
+- Merchant
+- Category
+- Amount
+- Status (colored badge — green for approved, red for declined, yellow for pending)
+- Decline Reason (shown only if status is declined)
+
+---
+
+## Feature 2: Transaction Approval Workflow
+
+### What this feature does
+
+When a transaction is over $500, it enters a pending state and waits for the card employee's manager to approve or reject it. Managers see a queue of pending approvals. They can approve or reject each one with an optional note. When approved, the transaction completes and monthly spend updates. When rejected, the transaction is declined.
+
+This is how Ramp gives finance teams control over large purchases.
+
+### Business logic for approvals
+
+When a manager approves a transaction:
+1. Update `approvals` table: set status to 'approved', set decided_at to now, save manager_note
+2. Update `transactions` table: set status to 'approved'
+3. Update `monthly_spend` table: add the transaction amount to total_spent_cents for this card this month
+4. Return the updated transaction with new status
+
+When a manager rejects a transaction:
+1. Update `approvals` table: set status to 'rejected', set decided_at to now, save manager_note
+2. Update `transactions` table: set status to 'declined', set decline_reason to "Rejected by manager: [manager_note]"
+3. Do NOT update monthly_spend — rejected transactions do not count toward spend
+4. Return the updated transaction with new status
+
+### Backend endpoints for Feature 2
+
+**GET /api/approvals/pending**
+
+Query parameter: manager_id (integer)
+
+Returns all pending approvals where the manager_id matches, with full transaction and employee details joined.
+
+Response:
+```json
+{
+    "pending_count": 2,
+    "approvals": [
+        {
+            "approval_id": 3,
+            "transaction_id": 12,
+            "requested_at": "2025-01-15T14:32:00",
+            "employee_name": "James Park",
+            "employee_department": "Engineering",
+            "card_name": "James Engineering Card",
+            "merchant_name": "AWS",
+            "merchant_category": "software",
+            "amount_cents": 75000,
+            "amount_display": "$750.00",
+            "card_remaining_after_approval_cents": 25000,
+            "card_remaining_after_approval_display": "$250.00"
+        }
+    ]
+}
+```
+
+Note: `card_remaining_after_approval` shows what the remaining limit would be IF this transaction is approved. This helps the manager understand the impact of their decision.
+
+**POST /api/approvals/{approval_id}/decide**
+
+Request body:
+```json
+{
+    "manager_id": 1,
+    "decision": "approved",
+    "manager_note": "Approved for Q1 infrastructure"
+}
+```
+
+Decision must be either "approved" or "rejected". manager_note is optional.
+
+Response:
+```json
+{
+    "approval_id": 3,
+    "decision": "approved",
+    "transaction_id": 12,
+    "transaction_status": "approved",
+    "message": "Transaction approved. $750.00 charged to James Engineering Card."
+}
+```
+
+Validate that the manager_id in the request matches the manager_id on the approval record. If not, return HTTP 403 with message "You are not authorized to approve this transaction."
+
+**GET /api/approvals/history**
+
+Query parameter: manager_id (integer)
+
+Returns all approvals (approved and rejected) for this manager, most recent first, limit 20.
+
+### Frontend UI for Feature 2
+
+Add a second main section to the dashboard called **"Approval Queue"**. This sits below the transaction submission section.
+
+At the top of this section, show a dropdown labeled "View as Manager" with options:
+- Sarah Chen (Manager, Engineering)
+- Maria Lopez (Manager, Sales)
+
+When a manager is selected, the section fetches from GET /api/approvals/pending?manager_id={id} and displays their queue.
+
+Show a count badge next to the section header: "Approval Queue (2 pending)"
+
+For each pending approval, show a card with:
+- Top row: Employee name, department, date requested
+- Middle row: Merchant name, category, amount in large text
+- Sub-row: Card name, remaining limit if approved shown in smaller gray text
+- Bottom row: Text input for optional manager note, then two buttons side by side
+
+Approve button: green, labeled "Approve $X.XX"
+Reject button: red, labeled "Reject"
+
+When either button is clicked:
+- Disable both buttons immediately to prevent double-click
+- Call POST /api/approvals/{approval_id}/decide
+- On success: remove this card from the queue with a fade animation, show a small toast notification at top right ("Approved" in green or "Rejected" in red)
+- On error: re-enable buttons, show error message on the card
+
+Below the pending queue, show an **Approval History** table with columns:
+- Date Decided
+- Employee
+- Merchant
+- Amount
+- Decision (green "Approved" or red "Rejected" badge)
+- Manager Note
+
+This table fetches from GET /api/approvals/history?manager_id={id} whenever the manager dropdown changes.
+
+---
+
+## File Structure
+
+Organize the backend code exactly like this:
+
+```
+backend/
+  main.py              ← FastAPI app, startup, CORS, route registration
+  database.py          ← SQLite connection, table creation, seed data
+  models.py            ← Pydantic models for all request/response bodies
+  routes/
+    cards.py           ← All /api/cards endpoints
+    transactions.py    ← All /api/transactions endpoints
+    approvals.py       ← All /api/approvals endpoints
+  services/
+    rules_engine.py    ← evaluate_transaction function lives here only
+    spend_tracker.py   ← monthly_spend read and update functions
+    approval_service.py ← approve and reject logic lives here only
+```
+
+Organize the frontend exactly like this:
+
+```
+frontend/src/
+  components/
+    TransactionForm.jsx     ← the submit transaction form
+    CardsOverview.jsx       ← cards table with utilization bars
+    RecentTransactions.jsx  ← transactions table
+    ApprovalQueue.jsx       ← pending approvals with approve/reject
+    ApprovalHistory.jsx     ← decided approvals table
+  api/
+    client.js               ← all fetch calls in one place
+                              no fetch calls inside components
+  App.jsx                   ← renders all components in order
+```
+
+---
+
+## Where to change things
+
+These are the specific places to edit specific logic. Do not change logic anywhere else.
+
+| What you want to change | File to edit | What to change |
+|---|---|---|
+| Spend limit check logic | `services/rules_engine.py` | The `evaluate_transaction` function |
+| Approval threshold ($500) | `services/rules_engine.py` | Line where `amount_cents > 50000` is checked |
+| Virtual card cap ($200) | `services/rules_engine.py` | Line where `amount_cents > 20000` is checked |
+| Monthly spend calculation | `services/spend_tracker.py` | The `get_monthly_spend` function |
+| Approval approve/reject logic | `services/approval_service.py` | The `process_decision` function |
+| Database connection | `database.py` | The `get_db` function |
+| Seed data | `database.py` | The `seed_data` function |
+| API routes | `routes/` folder | The relevant route file |
+| All UI for transaction form | `components/TransactionForm.jsx` | Full component |
+| All UI for approval queue | `components/ApprovalQueue.jsx` | Full component |
+
+---
+
+## What not to build
+
+Do not build any of these — they are out of scope:
+
+- User login or authentication
+- File or receipt uploads
+- Email notifications
+- Password management
+- Multiple company support
+- Currency conversion
+- Pagination (show all records, limit 50 max)
+- Charts or graphs
+- Settings pages
+- Mobile responsive design
+
+---
+
+## Acceptance criteria
+
+The build is complete when:
+
+1. Submitting a transaction under the monthly limit and under $500 returns "approved" and the card's remaining limit decreases correctly
+2. Submitting a transaction that would push the card over its monthly limit returns "declined" with the correct remaining amount in the message
+3. Submitting a transaction over $500 returns "pending_approval" and creates a record in the approvals table
+4. A frozen card declines all transactions immediately
+5. A blocked merchant category declines the transaction immediately
+6. A virtual card declines any single transaction over $200
+7. A manager can see their pending approval queue filtered to only their employees
+8. Approving a transaction updates the transaction status to approved and updates monthly spend
+9. Rejecting a transaction updates the transaction status to declined and does not update monthly spend
+10. The cards overview table shows correct utilization percentages that update after each transaction
+
+---
+
+Paste this entire document into Replit Agent and say: *"Build exactly what this document describes. Follow the file structure, schema, rules engine order, and endpoint specifications exactly. Do not add features not listed here."*
