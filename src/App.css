@@ -743,6 +743,78 @@ h3 { font-size: clamp(22px, 2.2vw, 28px); line-height: 1.15; }
   50%      { transform: translate3d(0, -8px, 0); }
 }
 
+/* Live product mock motion */
+.prodmock .pm-line {
+  stroke-dasharray: 1;
+  stroke-dashoffset: 1;
+}
+.prodmock.is-live .pm-line {
+  animation: pm-draw 1400ms cubic-bezier(.6,.2,.2,1) forwards;
+}
+.prodmock .pm-area { opacity: 0; }
+.prodmock.is-live .pm-area {
+  animation: pm-fade 700ms ease 900ms forwards;
+}
+@keyframes pm-draw { to { stroke-dashoffset: 0; } }
+@keyframes pm-fade { to { opacity: 1; } }
+
+.prodmock .pm-tx-row {
+  position: relative;
+  overflow: hidden;
+  opacity: 0;
+  transform: translateX(10px);
+}
+.prodmock.is-live .pm-tx-row {
+  animation: pm-row-in 520ms cubic-bezier(.2,.7,.2,1) forwards;
+}
+.prodmock.is-live .pm-tx-row:nth-child(1) { animation-delay: 1100ms; }
+.prodmock.is-live .pm-tx-row:nth-child(2) { animation-delay: 1260ms; }
+.prodmock.is-live .pm-tx-row:nth-child(3) { animation-delay: 1420ms; }
+.prodmock.is-live .pm-tx-row:nth-child(4) { animation-delay: 1580ms; }
+@keyframes pm-row-in {
+  to { opacity: 1; transform: none; }
+}
+
+.pm-tx-row::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(100deg, transparent 30%, rgba(216,255,61,0.35) 50%, transparent 70%);
+  transform: translateX(-110%);
+  pointer-events: none;
+}
+.prodmock.is-live .pm-tx-row::after {
+  animation: pm-shimmer 900ms ease forwards;
+}
+.prodmock.is-live .pm-tx-row:nth-child(1)::after { animation-delay: 1100ms; }
+.prodmock.is-live .pm-tx-row:nth-child(2)::after { animation-delay: 1260ms; }
+.prodmock.is-live .pm-tx-row:nth-child(3)::after { animation-delay: 1420ms; }
+.prodmock.is-live .pm-tx-row:nth-child(4)::after { animation-delay: 1580ms; }
+@keyframes pm-shimmer {
+  to { transform: translateX(110%); }
+}
+
+.prodmock-card { overflow: hidden; }
+.prodmock-card::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(115deg, transparent 38%, rgba(255,255,255,0.18) 50%, transparent 62%);
+  transform: translateX(-110%);
+  pointer-events: none;
+}
+.prodmock.is-live .prodmock-card::after {
+  animation: cc-sweep 7s ease-in-out 2.4s infinite;
+}
+.prodmock:not(.is-active) .prodmock-card::after {
+  animation-play-state: paused;
+}
+@keyframes cc-sweep {
+  0%   { transform: translateX(-110%); }
+  55%  { transform: translateX(110%); }
+  100% { transform: translateX(110%); }
+}
+
 /* Hover lifts */
 .feat, .t-card, .cg-cell, .mt-card {
   transition: transform 280ms cubic-bezier(.2,.7,.2,1),
@@ -771,6 +843,11 @@ h3 { font-size: clamp(22px, 2.2vw, 28px); line-height: 1.15; }
   .js-motion .reveal-stagger > * { opacity: 1 !important; transform: none !important; animation: none !important; transition: none !important; }
   .hero-float, .hero-parallax { animation: none !important; transform: none !important; }
   .feat:hover, .t-card:hover, .cg-cell:hover, .mt-card:hover { transform: none; }
+  .prodmock .pm-line { stroke-dashoffset: 0 !important; animation: none !important; }
+  .prodmock .pm-area { opacity: 1 !important; animation: none !important; }
+  .prodmock .pm-tx-row { opacity: 1 !important; transform: none !important; animation: none !important; }
+  .prodmock .pm-tx-row::after,
+  .prodmock-card::after { display: none !important; }
 }
 
 /* ---------- Responsive ---------- */

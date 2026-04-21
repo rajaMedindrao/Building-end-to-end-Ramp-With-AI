@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import { Link, NavLink } from 'react-router-dom'
-import { useParallax } from '../hooks/useMotion.js'
+import { useParallax, useInView, useCountUp } from '../hooks/useMotion.js'
 import { NAV_LINKS, FOOTER_COLS } from '../routes.js'
 
 export function Nav() {
@@ -161,8 +161,25 @@ export function Hero() {
 }
 
 function ProductMock() {
+  const [ref, inView] = useInView({ threshold: 0.25 })
+  const [revealed, setRevealed] = useState(false)
+  useEffect(() => { if (inView) setRevealed(true) }, [inView])
+
+  const cash = useCountUp(248310.42, revealed, 1500)
+  const spend = useCountUp(84920, revealed, 1500)
+  const fmtCash = cash.toLocaleString('en-US', {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  })
+  const fmtSpend = Math.round(spend).toLocaleString('en-US')
+
+  const cls =
+    'prodmock' +
+    (revealed ? ' is-live' : '') +
+    (inView ? ' is-active' : '')
+
   return (
-    <div className="prodmock">
+    <div className={cls} ref={ref}>
       <div className="prodmock-window">
         <div className="prodmock-toolbar">
           <span /><span /><span />
@@ -183,25 +200,28 @@ function ProductMock() {
             <div className="pm-row pm-head">
               <div>
                 <div className="pm-label">Cash balance</div>
-                <div className="pm-value">$248,310.42</div>
+                <div className="pm-value">${fmtCash}</div>
               </div>
               <div>
                 <div className="pm-label">Spend this month</div>
-                <div className="pm-value pm-value-sm">$84,920</div>
+                <div className="pm-value pm-value-sm">${fmtSpend}</div>
               </div>
             </div>
             <div className="pm-chart">
               <svg viewBox="0 0 320 80" preserveAspectRatio="none">
                 <polyline
-                  fill="none"
-                  stroke="#11342e"
-                  strokeWidth="2"
-                  points="0,60 30,55 60,40 90,42 120,28 150,32 180,18 210,22 240,12 270,18 300,8 320,12"
-                />
-                <polyline
+                  className="pm-area"
                   fill="rgba(17,52,46,0.08)"
                   stroke="none"
                   points="0,60 30,55 60,40 90,42 120,28 150,32 180,18 210,22 240,12 270,18 300,8 320,12 320,80 0,80"
+                />
+                <polyline
+                  className="pm-line"
+                  fill="none"
+                  stroke="#11342e"
+                  strokeWidth="2"
+                  pathLength="1"
+                  points="0,60 30,55 60,40 90,42 120,28 150,32 180,18 210,22 240,12 270,18 300,8 320,12"
                 />
               </svg>
             </div>
