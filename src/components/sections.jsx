@@ -1,20 +1,83 @@
+import { useState, useEffect } from 'react'
 import { useParallax } from '../hooks/useMotion.js'
 
 export function Nav() {
+  const [open, setOpen] = useState(false)
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+    const mql = window.matchMedia('(max-width: 980px)')
+    const onChange = (e) => { if (!e.matches) setOpen(false) }
+    mql.addEventListener
+      ? mql.addEventListener('change', onChange)
+      : mql.addListener(onChange)
+    return () => {
+      mql.removeEventListener
+        ? mql.removeEventListener('change', onChange)
+        : mql.removeListener(onChange)
+    }
+  }, [])
+
+  useEffect(() => {
+    if (!open) return
+    const onKey = (e) => { if (e.key === 'Escape') setOpen(false) }
+    document.addEventListener('keydown', onKey)
+    const prev = document.body.style.overflow
+    document.body.style.overflow = 'hidden'
+    return () => {
+      document.removeEventListener('keydown', onKey)
+      document.body.style.overflow = prev
+    }
+  }, [open])
+
+  const links = [
+    ['Product', true],
+    ['Customers', true],
+    ['Pricing', false],
+    ['Resources', true],
+    ['Company', true],
+  ]
+
   return (
     <header className="nav">
       <div className="container nav-inner">
         <a className="logo" href="#">ramp</a>
         <nav className="nav-links">
-          <a href="#">Product <span className="caret">▾</span></a>
-          <a href="#">Customers <span className="caret">▾</span></a>
-          <a href="#">Pricing</a>
-          <a href="#">Resources <span className="caret">▾</span></a>
-          <a href="#">Company <span className="caret">▾</span></a>
+          {links.map(([label, caret]) => (
+            <a key={label} href="#">
+              {label} {caret && <span className="caret">▾</span>}
+            </a>
+          ))}
         </nav>
         <div className="nav-cta">
           <a href="#" className="link-light">Sign in</a>
           <button className="btn btn-lime">Get started</button>
+        </div>
+        <button
+          className={`nav-burger ${open ? 'is-open' : ''}`}
+          aria-label={open ? 'Close menu' : 'Open menu'}
+          aria-expanded={open}
+          onClick={() => setOpen(v => !v)}
+        >
+          <span /><span /><span />
+        </button>
+      </div>
+
+      <div
+        className={`nav-mobile ${open ? 'is-open' : ''}`}
+        role="dialog"
+        aria-modal="true"
+        aria-hidden={!open}
+        {...(!open ? { inert: '' } : {})}
+      >
+        <nav className="nav-mobile-links">
+          {links.map(([label]) => (
+            <a key={label} href="#" onClick={() => setOpen(false)}>{label}</a>
+          ))}
+        </nav>
+        <div className="nav-mobile-cta">
+          <a href="#" className="link-light" onClick={() => setOpen(false)}>Sign in</a>
+          <button className="btn btn-lime" onClick={() => setOpen(false)}>Get started</button>
         </div>
       </div>
     </header>
