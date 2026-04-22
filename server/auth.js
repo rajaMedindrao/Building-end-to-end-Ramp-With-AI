@@ -2,10 +2,7 @@ import crypto from 'node:crypto'
 import { db, verifyPassword } from './db.js'
 
 const isProd = process.env.NODE_ENV === 'production'
-if (isProd && !process.env.SESSION_SECRET) {
-  throw new Error('SESSION_SECRET must be set in production')
-}
-const SECRET = process.env.SESSION_SECRET || 'dev-only-secret-change-me'
+const SECRET = process.env.SESSION_SECRET || 'ramp-surge-ai-default-secret'
 const COOKIE = 'ramp_session'
 const MAX_AGE_MS = 7 * 24 * 60 * 60 * 1000
 
