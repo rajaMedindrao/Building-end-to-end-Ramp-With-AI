@@ -1,8 +1,8 @@
-# Ramp — Corporate Card & Expense Management
+# Ramp by Surge AI — Corporate Card & Expense Management
 
 A full-stack clone of [Ramp](https://ramp.com) built end-to-end with AI. Covers the core spend control loop: issue cards, submit transactions, route to the right approver, and approve or reject in real time.
 
-**Live demo:** _[Add your Replit URL here once deployed]_
+**Live demo:** _[[https://52d4b5a0-8b14-40aa-8e67-57abecd77eb3-00-2brsh0uin6b54.worf.replit.dev/]]_
 
 ---
 
