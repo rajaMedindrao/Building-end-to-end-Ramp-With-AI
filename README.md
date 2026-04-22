@@ -2,7 +2,7 @@
 
 A full-stack clone of [Ramp](https://ramp.com) built end-to-end with AI. Covers the core spend control loop: issue cards, submit transactions, route to the right approver, and approve or reject in real time.
 
-**Live demo:** _[link](https://52d4b5a0-8b14-40aa-8e67-57abecd77eb3-00-2brsh0uin6b54.worf.replit.dev/)_
+**Live demo:** _[link](https://building-end-to-end-ramp-with-ai.replit.app/)_
 
 ---
 
