@@ -10,7 +10,7 @@ export default function ApprovalQueue({ managerId, managerName, approvals, onCha
           <span className="dash-badge">{approvals.length} pending</span>
         </h2>
         <p>
-          Reviewing as <strong>{managerName || '—'}</strong>. Charges over $500 land here.
+          Reviewing as <strong>{managerName || '—'}</strong>. All charges routed to you land here.
         </p>
       </header>
       {approvals.length === 0 ? (

@@ -94,7 +94,7 @@ export default function CardsManager({ cards, employees, onChange }) {
       <header className="dash-card-head dash-card-head-row">
         <div>
           <h2>Cards</h2>
-          <p>Issue, edit, freeze, or remove cards. Set who approves &gt; $500 charges.</p>
+          <p>Issue, edit, freeze, or remove cards. Set who approves charges.</p>
         </div>
         <button
           type="button"
@@ -142,7 +142,7 @@ export default function CardsManager({ cards, employees, onChange }) {
             </select>
           </label>
           <label>
-            <span>Approver (for &gt;$500)</span>
+            <span>Approver</span>
             <select
               value={form.approver_id}
               onChange={(e) => setForm({ ...form, approver_id: e.target.value })}

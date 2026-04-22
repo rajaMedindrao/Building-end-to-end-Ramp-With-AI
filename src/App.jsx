@@ -1,6 +1,7 @@
 import { useEffect } from 'react'
 import {
   BrowserRouter,
+  Navigate,
   Routes,
   Route,
   useLocation,
@@ -24,7 +25,10 @@ import { AuthProvider } from './auth/AuthContext.jsx'
 import ProtectedRoute from './auth/ProtectedRoute.jsx'
 import SignIn from './pages/SignIn.jsx'
 import SignUp from './pages/SignUp.jsx'
-import AppDashboard from './pages/AppDashboard.jsx'
+import AppLayout from './pages/AppDashboard.jsx'
+import OverviewPage from './pages/OverviewPage.jsx'
+import CardsPage from './pages/CardsPage.jsx'
+import TransactionsPage from './pages/TransactionsPage.jsx'
 
 function setMetaTag(selector, attr, value) {
   let el = document.head.querySelector(selector)
@@ -129,8 +133,6 @@ function MarketingLayout() {
 
 function Layout() {
   const { pathname } = useLocation()
-  // The /signin and /app routes are full-bleed product surfaces — they
-  // don't share the marketing nav/footer chrome.
   if (
     pathname === '/signin' ||
     pathname === '/signup' ||
@@ -145,10 +147,15 @@ function Layout() {
           path="/app"
           element={
             <ProtectedRoute>
-              <AppDashboard />
+              <AppLayout />
             </ProtectedRoute>
           }
-        />
+        >
+          <Route index element={<Navigate to="overview" replace />} />
+          <Route path="overview" element={<OverviewPage />} />
+          <Route path="cards" element={<CardsPage />} />
+          <Route path="transactions" element={<TransactionsPage />} />
+        </Route>
       </Routes>
     )
   }

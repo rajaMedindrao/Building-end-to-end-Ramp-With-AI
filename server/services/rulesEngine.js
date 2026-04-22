@@ -1,7 +1,6 @@
 import { db } from '../db.js'
 import { addToMonthlySpend, getMonthlySpend } from './spendTracker.js'
 
-const APPROVAL_THRESHOLD_CENTS = 50000 // $500.00
 const VIRTUAL_TXN_CAP_CENTS = 20000 // $200.00
 
 function parseBlocked(json) {
@@ -50,34 +49,20 @@ export function evaluateTransaction({ card, amountCents, merchantCategory }) {
     return { outcome: 'declined', reason: 'Virtual cards limited to $200 per transaction' }
   }
 
-  // Rule 5: Over $500 needs manager approval. The card's explicit
-  // approver_id wins; otherwise we fall back to the cardholder's manager.
-  if (amountCents > APPROVAL_THRESHOLD_CENTS) {
-    const approverId =
-      card.approver_id ||
-      db.prepare('SELECT manager_id FROM employees WHERE id = ?').get(card.employee_id)
-        ?.manager_id
-    if (!approverId) {
-      return {
-        outcome: 'declined',
-        reason: 'Amount over $500 requires manager approval but no approver is assigned',
-      }
-    }
+  // Rule 5: All transactions must be approved by the card's approver.
+  // The card's explicit approver_id wins; otherwise fall back to the
+  // cardholder's manager. If no approver exists at all, auto-approve.
+  const approverId =
+    card.approver_id ||
+    db.prepare('SELECT manager_id FROM employees WHERE id = ?').get(card.employee_id)?.manager_id
+
+  if (approverId) {
     const manager = db.prepare('SELECT * FROM employees WHERE id = ?').get(approverId)
     if (!manager) {
-      return {
-        outcome: 'declined',
-        reason: 'Configured approver no longer exists',
-      }
+      return { outcome: 'declined', reason: 'Configured approver no longer exists' }
     }
-    // Defensive guard: if the configured approver is not a manager, the
-    // /decide endpoint would 403 them and the transaction would be stuck
-    // in pending forever. Decline up-front instead.
     if (manager.role !== 'manager') {
-      return {
-        outcome: 'declined',
-        reason: 'Configured approver is not a manager',
-      }
+      return { outcome: 'declined', reason: 'Configured approver is not a manager' }
     }
     return { outcome: 'pending_approval', manager }
   }

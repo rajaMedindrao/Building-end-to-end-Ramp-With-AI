@@ -1,189 +1,75 @@
-import { useCallback, useEffect, useState } from 'react'
-import { Link } from 'react-router-dom'
-import { api } from '../api/client.js'
+import { useEffect, useRef, useState } from 'react'
+import { Link, NavLink, Outlet, useNavigate } from 'react-router-dom'
 import { useAuth } from '../auth/AuthContext.jsx'
-import TransactionForm from '../dashboard/TransactionForm.jsx'
-import CardsOverview from '../dashboard/CardsOverview.jsx'
-import RecentTransactions from '../dashboard/RecentTransactions.jsx'
-import ApprovalQueue from '../dashboard/ApprovalQueue.jsx'
-import ApprovalHistory from '../dashboard/ApprovalHistory.jsx'
-import CardsManager from '../dashboard/CardsManager.jsx'
-import DbInspector from '../dashboard/DbInspector.jsx'
 
-const TABS = [
-  { id: 'cards', label: 'Cards' },
-  { id: 'transactions', label: 'Transactions' },
-  { id: 'approvals', label: 'Approvals' },
-  { id: 'database', label: 'Database' },
-]
-
-export default function AppDashboard() {
+export default function AppLayout() {
   const { user, logout } = useAuth()
-  const [tab, setTab] = useState('cards')
-  const [cards, setCards] = useState([])
-  const [employees, setEmployees] = useState([])
-  const [managers, setManagers] = useState([])
-  const [managerId, setManagerId] = useState(null)
-  const [pending, setPending] = useState([])
-  const [history, setHistory] = useState([])
-  const [toast, setToast] = useState(null)
-  const [error, setError] = useState(null)
-  const [txnRefresh, setTxnRefresh] = useState(0)
-
-  const refreshCards = useCallback(async () => {
-    try {
-      const c = await api.listCards()
-      setCards(c.cards)
-    } catch (e) {
-      setError(e.message)
-    }
-  }, [])
-
-  const refreshEmployees = useCallback(async () => {
-    try {
-      const r = await api.listEmployees()
-      setEmployees(r.employees)
-    } catch (e) {
-      setError(e.message)
-    }
-  }, [])
-
-  const refreshApprovals = useCallback(
-    async (mid) => {
-      const id = mid ?? managerId
-      if (!id) return
-      try {
-        const [p, h] = await Promise.all([api.pendingApprovals(id), api.approvalHistory(id)])
-        setPending(p.approvals)
-        setHistory(h.history)
-      } catch (e) {
-        setError(e.message)
-      }
-    },
-    [managerId],
-  )
+  const [open, setOpen] = useState(false)
+  const dropRef = useRef(null)
+  const navigate = useNavigate()
 
   useEffect(() => {
-    refreshCards()
-    refreshEmployees()
-    api
-      .listManagers()
-      .then((r) => {
-        setManagers(r.managers)
-        const initial = r.managers.find((m) => m.id === user?.id)?.id || r.managers[0]?.id
-        if (initial) setManagerId(initial)
-      })
-      .catch((e) => setError(e.message))
-  }, [refreshCards, refreshEmployees, user?.id])
+    function onOutsideClick(e) {
+      if (dropRef.current && !dropRef.current.contains(e.target)) setOpen(false)
+    }
+    document.addEventListener('mousedown', onOutsideClick)
+    return () => document.removeEventListener('mousedown', onOutsideClick)
+  }, [])
 
-  useEffect(() => {
-    if (managerId) refreshApprovals(managerId)
-  }, [managerId, refreshApprovals])
-
-  function showToast(t) {
-    setToast(t)
-    setTimeout(() => setToast(null), 2200)
+  async function handleLogout() {
+    setOpen(false)
+    await logout()
+    navigate('/signin', { replace: true })
   }
 
-  async function afterTxn() {
-    await refreshCards()
-    await refreshApprovals()
-    setTxnRefresh((n) => n + 1)
-  }
-
-  async function afterDecision() {
-    await refreshApprovals()
-    await refreshCards()
-    setTxnRefresh((n) => n + 1)
-  }
-
-  const activeManager = managers.find((m) => m.id === managerId)
+  const navClass = ({ isActive }) => `app-tab${isActive ? ' is-active' : ''}`
 
   return (
     <main className="app-shell">
       <header className="app-bar">
-        <div className="app-bar-left">
-          <Link to="/" className="app-brand">
-            ramp by Surge AI
-          </Link>
-          <nav className="app-tabs" aria-label="Sections">
-            {TABS.map((t) => (
-              <button
-                key={t.id}
-                type="button"
-                className={`app-tab ${tab === t.id ? 'is-active' : ''}`}
-                onClick={() => setTab(t.id)}
-              >
-                {t.label}
-              </button>
-            ))}
-          </nav>
+        {/* Row 1: brand + profile — always side by side on every screen size */}
+        <div className="app-bar-top">
+          <Link to="/" className="app-brand">ramp by Surge AI</Link>
+
+          <div className="app-bar-right" ref={dropRef}>
+            <button
+              type="button"
+              className="app-profile-btn"
+              onClick={() => setOpen((v) => !v)}
+              aria-expanded={open}
+            >
+              <span className="app-profile-avatar">{user?.name?.[0] ?? '?'}</span>
+              <span className="app-profile-name">{user?.name}</span>
+              <span className="app-profile-caret" aria-hidden="true">{open ? '▴' : '▾'}</span>
+            </button>
+
+            {open && (
+              <div className="app-profile-dropdown">
+                <div className="app-profile-dropdown-info">
+                  <strong>{user?.name}</strong>
+                  <span>{user?.email}</span>
+                  <span className="app-profile-dropdown-meta">{user?.role} · {user?.department}</span>
+                </div>
+                <hr className="app-profile-divider" />
+                <button type="button" className="app-profile-signout" onClick={handleLogout}>
+                  Sign out
+                </button>
+              </div>
+            )}
+          </div>
         </div>
-        <div className="app-bar-right">
-          <span className="muted">
-            {user?.name} · {user?.role} · {user?.department}
-          </span>
-          <button type="button" className="btn btn-ghost" onClick={logout}>
-            Sign out
-          </button>
-        </div>
+
+        {/* Row 2: nav tabs — scrollable on small screens */}
+        <nav className="app-tabs" aria-label="Sections">
+          <NavLink to="/app/overview" className={navClass}>Overview</NavLink>
+          <NavLink to="/app/cards" className={navClass}>Cards</NavLink>
+          <NavLink to="/app/transactions" className={navClass}>Transactions</NavLink>
+        </nav>
       </header>
 
-      {error && (
-        <div className="txn-banner txn-banner-bad" role="alert">
-          <strong>✗ Error</strong>
-          <span>{error}</span>
-        </div>
-      )}
-
       <div className="app-grid">
-        {tab === 'cards' && (
-          <CardsManager cards={cards} employees={employees} onChange={refreshCards} />
-        )}
-
-        {tab === 'transactions' && (
-          <>
-            <TransactionForm cards={cards} onSubmitted={afterTxn} />
-            <CardsOverview cards={cards} />
-            <RecentTransactions refreshKey={txnRefresh} />
-          </>
-        )}
-
-        {tab === 'approvals' && (
-          <>
-            <section className="dash-card">
-              <header className="dash-card-head dash-card-head-row">
-                <div>
-                  <h2>View as manager</h2>
-                  <p>Switch perspective to review another manager's queue.</p>
-                </div>
-                <select
-                  value={managerId || ''}
-                  onChange={(e) => setManagerId(Number(e.target.value))}
-                >
-                  {managers.map((m) => (
-                    <option key={m.id} value={m.id}>
-                      {m.name} — {m.department}
-                    </option>
-                  ))}
-                </select>
-              </header>
-            </section>
-            <ApprovalQueue
-              managerId={managerId}
-              managerName={activeManager?.name}
-              approvals={pending}
-              onChange={afterDecision}
-              onToast={showToast}
-            />
-            <ApprovalHistory history={history} />
-          </>
-        )}
-
-        {tab === 'database' && <DbInspector />}
+        <Outlet />
       </div>
-
-      {toast && <div className={`app-toast app-toast-${toast.kind}`}>{toast.text}</div>}
     </main>
   )
 }

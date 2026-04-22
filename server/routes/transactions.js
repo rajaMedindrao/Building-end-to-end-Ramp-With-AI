@@ -50,7 +50,7 @@ router.post('/submit', requireAuth, (req, res) => {
     status: 'pending_approval',
     transaction_id: result.transactionId,
     approval_id: result.approvalId,
-    message: `Amount over $500. Sent to ${result.managerName} for approval.`,
+    message: `Sent to ${result.managerName} for approval.`,
     manager_name: result.managerName,
   })
 })
